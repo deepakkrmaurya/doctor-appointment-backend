@@ -1,0 +1,70 @@
+import express from "express";
+import {
+  createAppointment,
+  getAppointments,
+  getAppointmentById,
+  updateAppointmentStatus,
+  cancelAppointment,
+  getAvailableSlots,
+  updatePaymentStatus,
+  getToDayAppointment,
+  getAppointmentBydoctorIdAndHospitalIdAndAdminId,
+} from "../controller/appointment.controller.js";
+import { authenticate, authorize } from "../middleware/auth.middleware.js";
+// import { authenticate, authorize } from "../middleware/authMiddleware.js";
+
+const router = express.Router();
+
+// Create a new appointment (Patient access)
+router.post(
+  "/",
+  //   authenticate,
+  //   authorize(["patient", "admin"]),
+  createAppointment
+);
+
+// Get all appointments (Role-based access)
+router.get("/",
+  authenticate,
+  getAppointments
+);
+
+// Get single appointment by ID (Role-based access)
+router.get("/:id",
+  //  authenticate,
+  getAppointmentById);
+
+// Update appointment status (Doctor/Hospital Admin/Patient access)
+router.patch(
+  "/:id/status",
+    authenticate,
+    authorize(["doctor", "hospital", "patient", "admin"]),
+  updateAppointmentStatus
+);
+
+// Cancel an appointment (Patient/Admin access)
+router.patch(
+  "/:id/cancel",
+    authenticate,
+    authorize(["patient", "admin"]),
+  cancelAppointment
+);
+
+router.patch("/today", authenticate, authorize(['admin','hospital','doctor']) ,getToDayAppointment);
+
+// Get available slots for a doctor on specific date (Public or authenticated)
+router.get("/slots/:doctorId/:date", getAvailableSlots);
+
+// Update payment status (Admin/Payment system access)
+router.patch(
+  "/:id/payment",
+    authenticate,
+    authorize(["admin"]),
+  updatePaymentStatus
+);
+
+router.patch('/appointment',
+    authenticate,
+    authorize(["admin","doctor",'hospital'],getAppointmentBydoctorIdAndHospitalIdAndAdminId),
+)
+export default router;
