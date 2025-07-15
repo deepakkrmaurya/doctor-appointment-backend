@@ -30,7 +30,7 @@ export const authenticate = async (req, res, next) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "invalid token"
+      message: error.message
     })
   }
 };
