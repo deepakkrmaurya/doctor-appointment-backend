@@ -25,46 +25,48 @@ const login = async (req, res) => {
                 message: 'Invalid password'
             });
         }
-        const options= {
+        const options = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'Strict', // Adjust as needed
-            maxAge: 24 * 60 * 60 * 1000 // 1 day in milliseconds
+            secure: true, 
+            sameSite: 'none',
+            domain: 'https://doctor-appointment-backend-t00j.onrender.com',
+            path: '/',
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         };
-       
+
         const token = await user.generateJWTToken();
         const userData = await User.findById(user._id).select('-password');
         return res.status(200)
-        .cookie('token',token,options)
-        .json({
-            success:true,
-            message:"Login successful",
-            user: userData,
-            token:token
-        })
+            .cookie('token', token, options)
+            .json({
+                success: true,
+                message: "Login successful",
+                user: userData,
+                token: token
+            })
     } catch (error) {
-      return  res.status(500).json({ message: 'Internal server error', error: error.message });
+        return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 }
 
-export const Logout = async(req,res)=>{
+export const Logout = async (req, res) => {
     try {
-          const options = {
-            httpOnly:true,
-            secure:true
-          }
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
 
         return res.status(200)
-        .clearCookie('token',null,options)
-        .json({
-            success:true,
-            message:"user Logout successfully"
-        })
+            .clearCookie('token', null, options)
+            .json({
+                success: true,
+                message: "user Logout successfully"
+            })
     } catch (error) {
-          return res.status(500).json({
-            success:false,
-            message:error.message
-          })
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
     }
 }
 
@@ -88,7 +90,7 @@ const Register = async (req, res) => {
                 message: 'User already exists with this email or mobile number'
             });
         }
-        const newUser =await  User.create({
+        const newUser = await User.create({
             name,
             email,
             mobile,
@@ -103,18 +105,18 @@ const Register = async (req, res) => {
             sameSite: 'Strict', // Adjust as needed
             maxAge: 24 * 60 * 60 * 1000 // 1 day in milliseconds
         };
-       
-       return res.status(201)
-       .cookie('token', token, options)
-       .json({
-            success: true,
-            message: 'User registered successfully',
-            user: createUser,
-            token: token
-        });
+
+        return res.status(201)
+            .cookie('token', token, options)
+            .json({
+                success: true,
+                message: 'User registered successfully',
+                user: createUser,
+                token: token
+            });
 
     } catch (error) {
-      return  res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'Internal server error',
             error: error.message
@@ -124,7 +126,7 @@ const Register = async (req, res) => {
 
 const appointment = async (req, res) => {
     try {
-     
+
         const { date, time, doctorId } = req.body;
         if (!date || !time || !doctorId) {
             return res.status(400).json({
@@ -147,4 +149,4 @@ const appointment = async (req, res) => {
     }
 }
 
-export { login, Register,appointment }
+export { login, Register, appointment }
