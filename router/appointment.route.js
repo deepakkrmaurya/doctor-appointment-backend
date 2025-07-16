@@ -18,8 +18,8 @@ const router = express.Router();
 // Create a new appointment (Patient access)
 router.post(
   "/",
-  //   authenticate,
-  //   authorize(["patient", "admin"]),
+    authenticate,
+    authorize(["patient", "admin"]),
   createAppointment
 );
 
@@ -50,7 +50,7 @@ router.patch(
   cancelAppointment
 );
 
-router.patch("/today", authenticate, authorize(['admin','hospital','doctor']) ,getToDayAppointment);
+router.get("/today", authenticate, authorize(['admin','hospital','doctor']) ,getToDayAppointment);
 
 // Get available slots for a doctor on specific date (Public or authenticated)
 router.get("/slots/:doctorId/:date", getAvailableSlots);
