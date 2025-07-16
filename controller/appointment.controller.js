@@ -208,7 +208,7 @@ export const cancelAppointment = async (req, res) => {
 export const getToDayAppointment = async (req, res) => {
     try {
         const doctorId = req.user._id;
-
+         console.log(doctorId)
         if (!mongoose.Types.ObjectId.isValid(doctorId)) {
             return res.status(400).json({ message: "Invalid doctor ID" });
         }
@@ -220,6 +220,7 @@ export const getToDayAppointment = async (req, res) => {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1); // Start of next day
 
+       
         // Get all appointments for this doctor created today that aren't cancelled
         let appointments = null;
         if (req.user.role == 'hospital') {
@@ -243,7 +244,7 @@ export const getToDayAppointment = async (req, res) => {
                 },
                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
             });
-
+             
             appointments = appointment
         }
 
@@ -261,7 +262,10 @@ export const getToDayAppointment = async (req, res) => {
             appointments
         });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({
+            success:false,
+            message: error.message
+         });
     }
 }
 // Get available slots for a doctor on a specific date

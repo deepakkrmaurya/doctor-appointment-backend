@@ -18,8 +18,8 @@ const router = express.Router();
 // Create a new appointment (Patient access)
 router.post(
   "/",
-    authenticate,
-    authorize(["patient", "admin"]),
+  authenticate,
+  authorize(["patient", "admin"]),
   createAppointment
 );
 
@@ -29,6 +29,7 @@ router.get("/",
   getAppointments
 );
 
+router.get("/today", authenticate, authorize(['admin', 'hospital', 'doctor']), getToDayAppointment);
 // Get single appointment by ID (Role-based access)
 router.get("/:id",
   //  authenticate,
@@ -37,20 +38,19 @@ router.get("/:id",
 // Update appointment status (Doctor/Hospital Admin/Patient access)
 router.patch(
   "/:id/status",
-    authenticate,
-    authorize(["doctor", "hospital", "patient", "admin"]),
+  authenticate,
+  authorize(["doctor", "hospital", "patient", "admin"]),
   updateAppointmentStatus
 );
 
 // Cancel an appointment (Patient/Admin access)
 router.patch(
   "/:id/cancel",
-    authenticate,
-    authorize(["patient", "admin"]),
+  authenticate,
+  authorize(["patient", "admin"]),
   cancelAppointment
 );
 
-router.get("/today", authenticate, authorize(['admin','hospital','doctor']) ,getToDayAppointment);
 
 // Get available slots for a doctor on specific date (Public or authenticated)
 router.get("/slots/:doctorId/:date", getAvailableSlots);
@@ -58,13 +58,13 @@ router.get("/slots/:doctorId/:date", getAvailableSlots);
 // Update payment status (Admin/Payment system access)
 router.patch(
   "/:id/payment",
-    authenticate,
-    authorize(["admin"]),
+  authenticate,
+  authorize(["admin"]),
   updatePaymentStatus
 );
 
-router.patch('/appointment',
-    authenticate,
-    authorize(["admin","doctor",'hospital'],getAppointmentBydoctorIdAndHospitalIdAndAdminId),
+router.get('/appointment',
+  authenticate,
+  authorize(["admin", "doctor", 'hospital'], getAppointmentBydoctorIdAndHospitalIdAndAdminId),
 )
 export default router;
