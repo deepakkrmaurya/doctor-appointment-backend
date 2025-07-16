@@ -29,7 +29,6 @@ const login = async (req, res) => {
             httpOnly: true,
             secure: true, 
             sameSite: 'none',
-            domain: 'doctor-appointment-backend-t00j.onrender.com',
             path: '/',
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         };
