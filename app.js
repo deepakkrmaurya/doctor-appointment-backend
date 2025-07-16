@@ -5,12 +5,12 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors'
 
 const app = express();
-// app.use(cors({
-//     // origin:'http://localhost:5173',
-//     // origin: 'https://doctor-appointment-client-gray.vercel.app',
-//     credentials: true,
-// }))
-app.use(cors());
+app.use(cors({
+    // origin:'http://localhost:5173',
+    origin: 'https://doctor-appointment-client-gray.vercel.app',
+    credentials: true,
+}))
+
 
 app.use('/public', express.static('public'))
 
