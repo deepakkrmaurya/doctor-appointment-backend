@@ -26,7 +26,7 @@ const corsOptions = {
         ? 'https://doctor-appointment-client-gray.vercel.app'
         : 'http://localhost:5173',
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 200, // For legacy browsers
 };
