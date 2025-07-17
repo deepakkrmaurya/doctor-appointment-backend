@@ -32,7 +32,7 @@ router.get("/",
 router.get("/today", authenticate, authorize(['admin', 'hospital', 'doctor']), getToDayAppointment);
 // Get single appointment by ID (Role-based access)
 router.get("/:id",
-  //  authenticate,
+   authenticate,
   getAppointmentById);
 
 // Update appointment status (Doctor/Hospital Admin/Patient access)
