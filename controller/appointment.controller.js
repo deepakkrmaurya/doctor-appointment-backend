@@ -133,27 +133,31 @@ export const updateAppointmentStatus = async (req, res) => {
             return res.status(400).json({ message: "Invalid status value" });
         }
 
-        const appointment = await Appointment.findById(id);
+        const appointment = await apponitment.findById(id);
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
 
         // Check permissions (only doctor, hospital admin, or patient can update status)
-        const { role, userId } = req.user;
-        const isAuthorized =
-            role === "admin" ||
-            appointment.patientId.toString() === userId ||
-            appointment.doctorId.toString() === userId ||
-            appointment.hospitalId.toString() === userId;
-
-        if (!isAuthorized) {
-            return res.status(403).json({ message: "Unauthorized access" });
-        }
+        // const { role, _id } = req.user;
+        //   console.log(mongoose.Types.ObjectId.isValid(id))
+        // const isAuthorized =
+        //     role === "admin" ||
+        //     appointment.patientId.toString() === _id ||
+        //     appointment.doctorId.toString() === _id ||
+        //     appointment.hospitalId.toString() === _id;
+          
+        // if (!isAuthorized) {
+        //     return res.status(403).json({ message: "Unauthorized access" });
+        // }
 
         appointment.status = status;
         const updatedAppointment = await appointment.save();
 
-        res.status(200).json(updatedAppointment);
+       return res.status(200).json({
+        success:true,
+        message:"Appointment confirmed"
+       });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -163,13 +167,11 @@ export const updateAppointmentStatus = async (req, res) => {
 export const cancelAppointment = async (req, res) => {
     try {
         const { id } = req.params;
-        const { cancellationReason } = req.body;
-
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid appointment ID" });
         }
 
-        const appointment = await Appointment.findById(id);
+        const appointment = await apponitment.findById(id);
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
@@ -187,22 +189,16 @@ export const cancelAppointment = async (req, res) => {
                 .json({ message: "Appointment is already cancelled" });
         }
 
-        // Check permissions (patient or admin can cancel)
-        const { role, userId } = req.user;
-        const isAuthorized =
-            role === "admin" || appointment.patientId.toString() === userId;
-
-        if (!isAuthorized) {
-            return res.status(403).json({ message: "Unauthorized access" });
-        }
 
         appointment.status = "cancelled";
-        appointment.cancellationReason = cancellationReason;
         const updatedAppointment = await appointment.save();
 
-        res.status(200).json(updatedAppointment);
+       return res.status(200).json({
+            success:true,
+            message:"Appointment cancelled successfully."
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      return  res.status(500).json({ message: error.message });
     }
 };
 export const getToDayAppointment = async (req, res) => {
