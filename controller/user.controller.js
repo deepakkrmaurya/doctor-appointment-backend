@@ -1,48 +1,102 @@
 import User from "../model/user.model.js";
+import { sendOTP } from "../utils/SendOtp.js";
 
+async function generate4DigitOTP() {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+}
 
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        console.log(req.body);
-        if (!email || !password) {
+        const { userid } = req.body;
+        if (!userid) {
             return res.status(400).json({
                 success: false,
-                message: 'Email and password are required'
+                message: 'userid is required'
             });
         }
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ userid });
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
+            const otp = await generate4DigitOTP();
+            const newUser = await User.create({
+                userid,
+                otp,
+                otpExp: Date.now()
+            })
+            await newUser.save();
+            await sendOTP(userid, newUser.otp)
+            return res.status(201).json({
+                success: true,
+                otp: newUser.otp
+            })
+        }
+        // const isPasswordValid = await user.comparePassword(password);
+        // if (!isPasswordValid) {
+        //     return res.status(401).json({
+        //         success: false,
+        //         message: 'Invalid password'
+        //     });
+        // }
+        // const options = {
+        //     httpOnly: true,
+        //     secure: true, 
+        //     maxAge: 24 * 60 * 60 * 1000 // 1 day
+        // };
+
+        // const token = await user.generateJWTToken();
+        // const userData = await User.findById(user._id).select('-password');
+        const otp = await generate4DigitOTP();
+        user.otp = otp;
+        user.otpExp = Date.now();
+        await user.save()
+        await sendOTP(userid, otp)
+        console.log(await sendOTP(userid, otp))
+        return res.status(201).json({
+            success: true,
+            message: "otp send your userid",
+            otp: user.otp
+        })
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+}
+
+export const verifyOtp = async (req, res) => {
+    const { userid, otp } = req.body;
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+
+    try {
+        const otpDoc = await User.findOne({
+            userid,
+            otp,
+            otpExp: { $gte: fiveMinutesAgo }
+        });
+        if (!otpDoc) {
+            return res.status(400).json({
+                message: 'OTP expired',
+                expired: true
             });
         }
-        const isPasswordValid = await user.comparePassword(password);
-        if (!isPasswordValid) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid password'
-            });
-        }
+        otpDoc.otp = undefined
+        otpDoc.otpExp = undefined
+        await otpDoc.save()
         const options = {
             httpOnly: true,
-            secure: true, 
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
+            secure: true,
+            maxAge: 24 * 60 * 60 * 1000
         };
 
-        const token = await user.generateJWTToken();
-        const userData = await User.findById(user._id).select('-password');
-        return res.status(200)
+        const token = await otpDoc.generateJWTToken();
+        return res
             .cookie('token', token, options)
             .json({
                 success: true,
-                message: "Login successful",
-                user: userData,
-                token: token
-            })
-    } catch (error) {
-        return res.status(500).json({ message: 'Internal server error', error: error.message });
+                message: "Login successfully",
+                token: token,
+                user: otpDoc
+            });
+    } catch (err) {
+        return res.status(500).json({ error: 'Error verifying OTP' });
     }
 }
 
