@@ -23,36 +23,21 @@ const login = async (req, res) => {
                 otpExp: Date.now()
             })
             await newUser.save();
-            await sendOTP(userid, newUser.otp)
+            // await sendOTP(userid, newUser.otp)
             return res.status(201).json({
                 success: true,
+                message: "otp send your",
                 otp: newUser.otp
             })
         }
-        // const isPasswordValid = await user.comparePassword(password);
-        // if (!isPasswordValid) {
-        //     return res.status(401).json({
-        //         success: false,
-        //         message: 'Invalid password'
-        //     });
-        // }
-        // const options = {
-        //     httpOnly: true,
-        //     secure: true, 
-        //     maxAge: 24 * 60 * 60 * 1000 // 1 day
-        // };
-
-        // const token = await user.generateJWTToken();
-        // const userData = await User.findById(user._id).select('-password');
         const otp = await generate4DigitOTP();
         user.otp = otp;
         user.otpExp = Date.now();
         await user.save()
-        await sendOTP(userid, otp)
-        console.log(await sendOTP(userid, otp))
+        // await sendOTP(userid, otp)
         return res.status(201).json({
             success: true,
-            message: "otp send your userid",
+            message: "otp send your",
             otp: user.otp
         })
     } catch (error) {

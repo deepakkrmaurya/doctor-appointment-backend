@@ -1,51 +1,50 @@
+
 import Hospital from "../model/hospital.model.js";
 import mongoose from "mongoose";
 
- 
-export const Login = async(req,res)=>{
-   try {
-       const { email, password } = req.body;
-      //  console.log(req.body)
-      //  return
-       if (!email || !password) {
-         return res.status(400).json({ message: "Email and password are required" });
-       }
-       // Find doctor by email
-       const hospital = await Hospital.findOne({ email }).select("+password");
-       if (!hospital) {
-         return res.status(404).json({ message: "Invalid email or password" });
-        }
-        // Check password (assuming you have a method to compare passwords)
-        const isMatch = await hospital.comparePassword(password); // Assuming you have a method to compare passwords
-       if (!isMatch) {
-         return res.status(401).json({ message: "Invalid credentials" });
-       }
-       // Generate a token (assuming you have a method to generate tokens)
-       const token =await hospital.generateAuthToken();
-       // Send response with doctor details and token
-      const doctorData = hospital.toObject();
-       delete doctorData.password; // Remove password from response 
-       
-       const option = {
-         httpOnly:true,
-         secure:true
-       }
-      return res.status(200)
-      .cookie('token',token,option)
+
+export const Login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    //  console.log(req.body)
+    //  return
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+    // Find doctor by email
+    const hospital = await Hospital.findOne({ email }).select("+password");
+    if (!hospital) {
+      return res.status(404).json({ message: "Invalid email or password" });
+    }
+    // Check password (assuming you have a method to compare passwords)
+    const isMatch = await hospital.comparePassword(password); // Assuming you have a method to compare passwords
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+    // Generate a token (assuming you have a method to generate tokens)
+    const token = await hospital.generateAuthToken();
+    // Send response with doctor details and token
+    const doctorData = hospital.toObject();
+    delete doctorData.password; // Remove password from response 
+
+    const option = {
+      httpOnly: true,
+      secure: true
+    }
+    return res.status(200)
+      .cookie('token', token, option)
       .json({
-         success: true,
-         message: "Login successful",
-         user: hospital,
-         token,
-       });
-     } catch (error) {
-      return res.status(500).json({ message: error.message });
-     }
+        success: true,
+        message: "Login successful",
+        user: hospital,
+        token,
+      });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
 }
 
-// @desc    Create a new hospital
-// @route   POST /api/hospitals
-// @access  Private/Admin
+
 export const createHospital = async (req, res) => {
   try {
     const {
@@ -63,11 +62,11 @@ export const createHospital = async (req, res) => {
       specialties,
       facilities,
     } = req.body;
-   
 
-  // 
-  
-  // return 
+
+    // 
+
+    // return 
 
     // Validate required fields
     if (
@@ -114,7 +113,7 @@ export const createHospital = async (req, res) => {
     });
 
     const createdHospital = await hospital.save();
-   return res.status(201).json(
+    return res.status(201).json(
       {
         sucess: true,
         message: "hospital create successfully",
@@ -127,9 +126,7 @@ export const createHospital = async (req, res) => {
   }
 };
 
-// @desc    Get all hospitals
-// @route   GET /api/hospitals
-// @access  Public
+
 export const getHospitals = async (req, res) => {
   try {
     const { city, state, specialty, minRating, name } = req.query;
@@ -161,15 +158,13 @@ export const getHospitals = async (req, res) => {
     }
 
     const hospitals = await Hospital.find(query).sort({ rating: -1 });
-   return  res.status(200).json(hospitals);
+    return res.status(200).json(hospitals);
   } catch (error) {
-   return  res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get single hospital by ID
-// @route   GET /api/hospitals/:id
-// @access  Public
+
 export const getHospitalById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -189,9 +184,7 @@ export const getHospitalById = async (req, res) => {
   }
 };
 
-// @desc    Update hospital
-// @route   PUT /api/hospitals/:id
-// @access  Private/Admin
+
 export const updateHospital = async (req, res) => {
   try {
     const { id } = req.params;
@@ -245,6 +238,31 @@ export const updateHospital = async (req, res) => {
   }
 };
 
+
+export const updateStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { _id } = req.user;
+    const verifyHospital = await Hospital.findById(_id);
+    if (!verifyHospital) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid hospital id'
+      })
+    }
+    verifyHospital.status = status;
+    await verifyHospital.save()
+    return res.status(200).json({
+      success: true,
+      message: "Status update successfully"
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
 // @desc    Delete hospital
 // @route   DELETE /api/hospitals/:id
 // @access  Private/Admin

@@ -7,6 +7,7 @@ import {
   updateHospital,
   deleteHospital,
   Login,
+  updateStatus,
 } from "../controller/hospital.controller.js";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
 
@@ -36,6 +37,12 @@ router.put(
   authenticate,
   authorize(["admin",'hospital']),
   updateHospital
+);
+router.put(
+  "/:id/status",
+  authenticate,
+  authorize(["admin"]),
+  updateStatus
 );
 // Delete hospital (Admin access)
 router.delete(

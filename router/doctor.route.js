@@ -6,7 +6,7 @@ const router = Router();
 router.post('/login',Login)
 router.post("/", authenticate, authorize(["admin",'hospital']), upload.single('photo'), createDoctor);
 router.get("/", getDoctors);
-router.get("/:id", authorize(["admin",'hospital']), getDoctorById);
+router.get("/:id",authenticate ,authorize(["admin",'hospital']), getDoctorById);
 router.get("/:hospitalId/hospital", getDoctorByHospitalId);
 router.put("/:id", authorize(["admin",'hospital','doctor']) ,updateDoctor);
 router.delete("/:id", authenticate,  authorize(["admin",'hospital']),deleteDoctor);
