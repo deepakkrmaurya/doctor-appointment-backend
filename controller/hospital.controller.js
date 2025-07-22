@@ -1,4 +1,5 @@
 
+import doctorNodel from "../model/doctor.nodel.js";
 import Hospital from "../model/hospital.model.js";
 import mongoose from "mongoose";
 
@@ -202,7 +203,6 @@ export const updateHospital = async (req, res) => {
       specialties,
       facilities,
     } = req.body;
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid hospital ID" });
     }
@@ -217,7 +217,6 @@ export const updateHospital = async (req, res) => {
       return res.status(400).json({ message: "Rating must be between 0 and 5" });
     }
 
-    // Update hospital fields
     hospital.name = name || hospital.name;
     hospital.address = address || hospital.address;
     hospital.city = city || hospital.city;
@@ -232,9 +231,12 @@ export const updateHospital = async (req, res) => {
     hospital.facilities = facilities || hospital.facilities;
 
     const updatedHospital = await hospital.save();
-    res.status(200).json(updatedHospital);
+    return res.status(200).json({
+      success: true,
+      message: "hospital update successfully"
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -243,7 +245,10 @@ export const updateStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const { _id } = req.user;
-    const verifyHospital = await Hospital.findById(_id);
+
+    const { id } = req.params
+
+    const verifyHospital = await Hospital.findById(id);
     if (!verifyHospital) {
       return res.status(400).json({
         success: false,
@@ -254,7 +259,7 @@ export const updateStatus = async (req, res) => {
     await verifyHospital.save()
     return res.status(200).json({
       success: true,
-      message: "Status update successfully"
+      message: `${status} successfully`
     })
   } catch (error) {
     return res.status(500).json({
@@ -263,9 +268,7 @@ export const updateStatus = async (req, res) => {
     })
   }
 }
-// @desc    Delete hospital
-// @route   DELETE /api/hospitals/:id
-// @access  Private/Admin
+
 export const deleteHospital = async (req, res) => {
   try {
     const { id } = req.params;
@@ -273,15 +276,21 @@ export const deleteHospital = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid hospital ID" });
     }
-
+    await doctorNodel.deleteMany({ hospitalId: id });
     const hospital = await Hospital.findByIdAndDelete(id);
     if (!hospital) {
-      return res.status(404).json({ message: "Hospital not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Hospital not found"
+      });
     }
 
-    res.status(200).json({ message: "Hospital removed" });
+    return res.status(200).json({
+      success: true,
+      message: "Hospital and associated doctors deleted successfully"
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 

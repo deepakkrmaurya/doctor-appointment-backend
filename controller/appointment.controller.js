@@ -1,17 +1,27 @@
-
+import Razorpay from 'razorpay';
+import crypto from 'crypto'
+import dotenv from 'dotenv';
+dotenv.config()
 import mongoose from "mongoose";
 import apponitment from "../model/apponitment.js";
-
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
 // Create a new appointment
 export const createAppointment = async (req, res) => {
     try {
         const {
+            patient,
+            mobile,
+            dob,
             patientId,
             doctorId,
             hospitalId,
             date,
             slot,
             amount,
+            booking_amount
         } = req.body;
         //    console.log("Received appointment data:", req.body); // Debugging line
         // Validate required fields
@@ -21,7 +31,8 @@ export const createAppointment = async (req, res) => {
             !hospitalId ||
             !date ||
             !slot ||
-            !amount
+            !amount ||
+            !booking_amount
         ) {
             return res.status(400).json({ message: "All fields are required" });
         }
@@ -38,26 +49,82 @@ export const createAppointment = async (req, res) => {
         }
 
         const newAppointment = new apponitment({
+            patient,
+            mobile,
+            dob,
             patientId,
             doctorId,
             hospitalId,
             date,
             slot,
             amount,
-            // status: "confirmed", // or "pending" based on your workflow
-            // paymentStatus: "completed", // or "pending" based on your payment flow
+            booking_amount
+
         });
 
         const savedAppointment = await newAppointment.save();
+        const options = {
+            amount: booking_amount * 100, // Amount in paise
+            currency: 'INR',
+            receipt: `appointment_${savedAppointment._id}`,
+            notes: {
+                appointment_id: savedAppointment._id.toString(),
+                customer_name: patient
+            }
+        };
+        const order = await razorpay.orders.create(options);
+        newAppointment.razorpayOrderId = order.id;
+        await newAppointment.save();
+
         return res.status(201).json({
             success: true,
-            message: "Appointment created successfully",
-            appointment: savedAppointment,
+            orderId: order.id,
+            amount: order.booking_amount,
+            currency: order.currency,
+            savedAppointment
         });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
+
+export const verifyPayment = async (req, res) => {
+    try {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+        // Verify the payment signature
+        const generatedSignature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+            .digest('hex');
+
+        if (generatedSignature !== razorpay_signature) {
+            return res.status(400).json({ success: false, error: 'Invalid signature' });
+        }
+
+        // Update appointment
+        const appointment = await apponitment.findOneAndUpdate(
+            { razorpayOrderId: razorpay_order_id },
+            {
+                razorpayPaymentId: razorpay_payment_id,
+                razorpaySignature: razorpay_signature,
+                status: 'Confirmed',
+                paymentStatus:"Complete"
+            },
+            { new: true }
+        );
+
+        if (!appointment) {
+            return res.status(404).json({ success: false, error: 'Appointment not found' });
+        }
+
+        res.json({ success: true, appointment });
+
+    } catch (error) {
+        console.error(error.message);
+       return res.status(500).json({ success: false, error: 'Server error' });
+    }
+}
 
 // Get all appointments
 export const getAppointments = async (req, res) => {
@@ -88,7 +155,7 @@ export const getAppointments = async (req, res) => {
 export const getAppointmentById = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid appointment ID" });
         }
@@ -146,7 +213,7 @@ export const updateAppointmentStatus = async (req, res) => {
         //     appointment.patientId.toString() === _id ||
         //     appointment.doctorId.toString() === _id ||
         //     appointment.hospitalId.toString() === _id;
-          
+
         // if (!isAuthorized) {
         //     return res.status(403).json({ message: "Unauthorized access" });
         // }
@@ -154,10 +221,10 @@ export const updateAppointmentStatus = async (req, res) => {
         appointment.status = status;
         const updatedAppointment = await appointment.save();
 
-       return res.status(200).json({
-        success:true,
-        message:"Appointment confirmed"
-       });
+        return res.status(200).json({
+            success: true,
+            message: "Appointment confirmed"
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -193,18 +260,17 @@ export const cancelAppointment = async (req, res) => {
         appointment.status = "cancelled";
         const updatedAppointment = await appointment.save();
 
-       return res.status(200).json({
-            success:true,
-            message:"Appointment cancelled successfully."
+        return res.status(200).json({
+            success: true,
+            message: "Appointment cancelled successfully."
         });
     } catch (error) {
-      return  res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 };
 export const getToDayAppointment = async (req, res) => {
     try {
         const doctorId = req.user._id;
-         console.log(doctorId)
         if (!mongoose.Types.ObjectId.isValid(doctorId)) {
             return res.status(400).json({ message: "Invalid doctor ID" });
         }
@@ -216,7 +282,7 @@ export const getToDayAppointment = async (req, res) => {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1); // Start of next day
 
-       
+
         // Get all appointments for this doctor created today that aren't cancelled
         let appointments = null;
         if (req.user.role == 'hospital') {
@@ -232,6 +298,7 @@ export const getToDayAppointment = async (req, res) => {
             appointments = appointment
         }
         if (req.user.role == 'doctor') {
+            console.log(req.user.role)
             const appointment = await apponitment.find({
                 doctorId,
                 createdAt: {
@@ -240,7 +307,20 @@ export const getToDayAppointment = async (req, res) => {
                 },
                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
             });
-             
+
+            appointments = appointment
+        }
+
+        if (req.user.role == 'staff') {
+            console.log(req.user.hospitalId)
+            const appointment = await apponitment.find({
+                hospitalId: req.user.hospitalId,
+                createdAt: {
+                    $gte: today,  // Greater than or equal to start of today
+                    $lt: tomorrow // Less than start of tomorrow
+                },
+                status: { $ne: 'cancelled' } // Exclude cancelled appointments
+            });
             appointments = appointment
         }
 
@@ -259,9 +339,9 @@ export const getToDayAppointment = async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            success:false,
+            success: false,
             message: error.message
-         });
+        });
     }
 }
 // Get available slots for a doctor on a specific date
@@ -353,7 +433,7 @@ export const getAppointmentBydoctorIdAndHospitalIdAndAdminId = async (req, res) 
         if (req.user.role == 'hospital') {
             const appointment = await apponitment.find({
                 hospitalId: doctorId,
-                
+
             });
 
             appointments = appointment

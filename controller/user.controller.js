@@ -58,7 +58,7 @@ export const verifyOtp = async (req, res) => {
         });
         if (!otpDoc) {
             return res.status(400).json({
-                message: 'OTP expired',
+                message: 'Invalid otp',
                 expired: true
             });
         }

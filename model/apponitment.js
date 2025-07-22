@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 const AppointmentSchema = new mongoose.Schema({
+  patient: {
+    type: String,
+    requred: true
+  },
+  mobile: {
+    type: String,
+    requred: true
+  },
+  dob: {
+    type: Date,
+  },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // Assuming you have a User/Patient model
@@ -15,8 +26,13 @@ const AppointmentSchema = new mongoose.Schema({
     ref: 'Hospital',
     required: true,
   },
+  booking_amount: { type: Number, required: true },
+  razorpayOrderId: { type: String},
+  razorpayPaymentId: { type: String },
+  razorpaySignature: { type: String},
+  paymentStatus: { type: String},
   date: {
-    type: String, // or Date if you want to use native Date type
+    type: String,
     required: true,
   },
   slot: {

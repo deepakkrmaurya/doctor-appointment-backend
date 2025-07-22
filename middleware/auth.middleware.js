@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../model/user.model.js";
 import doctorNodel from "../model/doctor.nodel.js";
 import hospitalModel from "../model/hospital.model.js";
+import Staff from "../model/staff.model.js";
 export const authenticate = async (req, res, next) => {
   try {
     const token = req.cookies.token || req.header("Authorization")?.replace("Bearer ", "");
@@ -11,9 +12,9 @@ export const authenticate = async (req, res, next) => {
         success: false,
         message: 'invali Token'
       })
-    }
-
+    } 
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    
     let user = await User.findById(decoded.id).select("-password");
     if (!user) {
       user = await doctorNodel.findById(decoded.id).select("-password");
@@ -23,11 +24,15 @@ export const authenticate = async (req, res, next) => {
       user = await hospitalModel.findById(decoded.id).select("-password");
     }
 
+    if (!user) {
+      user = await Staff.findById(decoded.id).select("-password");
+    }
+
     req.user = user;
-    // console.log(req.user)
     next();
 
   } catch (error) {
+
     return res.status(500).json({
       success: false,
       message: error.message

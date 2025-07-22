@@ -9,9 +9,9 @@ import {
   updatePaymentStatus,
   getToDayAppointment,
   getAppointmentBydoctorIdAndHospitalIdAndAdminId,
+  verifyPayment,
 } from "../controller/appointment.controller.js";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
-// import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -22,17 +22,17 @@ router.post(
   authorize(["patient", "admin"]),
   createAppointment
 );
-
+router.post('/verify',authenticate,verifyPayment);
 // Get all appointments (Role-based access)
 router.get("/",
   authenticate,
   getAppointments
 );
 
-router.get("/today", authenticate, authorize(['admin', 'hospital', 'doctor']), getToDayAppointment);
+router.get("/today", authenticate, authorize(['admin', 'hospital', 'doctor','staff']), getToDayAppointment);
 // Get single appointment by ID (Role-based access)
 router.get("/:id",
-   authenticate,
+  authenticate,
   getAppointmentById);
 
 // Update appointment status (Doctor/Hospital Admin/Patient access)
@@ -47,7 +47,7 @@ router.patch(
 router.patch(
   "/:id/cancel",
   authenticate,
-  authorize(["patient", "admin"]),
+  authorize(["patient", "admin", 'hospital', 'doctor']),
   cancelAppointment
 );
 

@@ -46,9 +46,11 @@ import userRouter from './router/user.router.js'
 import appointmentRoute from './router/appointment.route.js';
 import doctorRoutes from './router/doctor.route.js';
 import hospitalRoutes from './router/hospital.route.js';
+import StaffRoutes from './router/staff.route.js';
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/appointment', appointmentRoute)
 app.use('/api/v1/doctor', doctorRoutes)
+app.use('/api/v1/staff', StaffRoutes)
 app.use('/api/v1/hospital', hospitalRoutes)
 app.use('/', (req, res) => {
     res.send('server is runing');
