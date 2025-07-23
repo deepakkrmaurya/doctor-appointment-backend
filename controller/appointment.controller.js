@@ -45,7 +45,10 @@ export const createAppointment = async (req, res) => {
             status: { $ne: "cancelled" },
         });
         if (existingAppointment) {
-            return res.status(400).json({ message: "Slot is already booked" });
+            return res.status(400).json({
+                success: false,
+                message: "Slot is already booked"
+            });
         }
 
         const newAppointment = new apponitment({
@@ -109,7 +112,7 @@ export const verifyPayment = async (req, res) => {
                 razorpayPaymentId: razorpay_payment_id,
                 razorpaySignature: razorpay_signature,
                 status: 'Confirmed',
-                paymentStatus:"Complete"
+                paymentStatus: "Complete"
             },
             { new: true }
         );
@@ -122,7 +125,7 @@ export const verifyPayment = async (req, res) => {
 
     } catch (error) {
         console.error(error.message);
-       return res.status(500).json({ success: false, error: 'Server error' });
+        return res.status(500).json({ success: false, error: 'Server error' });
     }
 }
 
@@ -325,7 +328,13 @@ export const getToDayAppointment = async (req, res) => {
         }
 
         if (req.user.role == 'admin') {
-            const appointment = await apponitment.find();
+            const appointment = await apponitment.find({
+                createdAt: {
+                    $gte: today,  // Greater than or equal to start of today
+                    $lt: tomorrow // Less than start of tomorrow
+                },
+                status: { $ne: 'cancelled' }
+            });
 
             appointments = appointment
         }

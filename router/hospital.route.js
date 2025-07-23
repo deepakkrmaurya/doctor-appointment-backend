@@ -10,6 +10,7 @@ import {
   updateStatus,
 } from "../controller/hospital.controller.js";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
+import upload from "../middleware/multer.js";
 
 // Create a new hospital (Admin access)
  
@@ -19,6 +20,7 @@ router.post(
   "/",
   authenticate,
   authorize(["admin"]),
+  upload.single('image'),
   createHospital
 );
 // Get all hospitals (Public access)

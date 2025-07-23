@@ -93,8 +93,8 @@ export const Login = async (req, res) => {
             .cookie('token', token, option)
             .json({
                 success: true,
-                user:staff,
-                token:token,
+                user: staff,
+                token: token,
                 message: 'login successfully'
             })
     } catch (error) {
@@ -122,6 +122,31 @@ export const getStaff = async (req, res) => {
             success: true,
             staff: Allstaff
         })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+export const deleteStaff = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const staff = await Staff.findByIdAndDelete(id);
+        if (!staff) {
+            return res.status(400).json({
+                success: false,
+                message: "invalid staff id"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "remove successfully"
+        })
+
+
     } catch (error) {
         return res.status(500).json({
             success: false,

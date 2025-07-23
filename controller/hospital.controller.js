@@ -58,7 +58,7 @@ export const createHospital = async (req, res) => {
       email,
       password,
       website,
-      image,
+     
       rating,
       specialties,
       facilities,
@@ -107,7 +107,7 @@ export const createHospital = async (req, res) => {
       email,
       password,
       website: website || "",
-      image: image || "",
+      image: process.env.APP_API_URL + '/'+  req.file.path,
       rating,
       specialties,
       facilities,
@@ -203,6 +203,7 @@ export const updateHospital = async (req, res) => {
       specialties,
       facilities,
     } = req.body;
+ 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid hospital ID" });
     }
