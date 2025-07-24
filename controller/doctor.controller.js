@@ -191,7 +191,6 @@ export const getDoctorById = async (req, res) => {
       "hospitalId",
       "name location address"
     );
-
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
@@ -388,7 +387,7 @@ export const removeDoctorSlots = async (req, res) => {
 export const getDoctorSlotsByDate = async (req, res) => {
   try {
     const { id, date } = req.params;
-
+    console.log(id)
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid doctor ID" });
     }

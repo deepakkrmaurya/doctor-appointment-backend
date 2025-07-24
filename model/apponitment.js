@@ -13,8 +13,7 @@ const AppointmentSchema = new mongoose.Schema({
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Assuming you have a User/Patient model
-    required: true,
+    ref: 'User',
   },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -53,14 +52,13 @@ const AppointmentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['UPI', 'Card', 'Cash', 'NetBanking'],
+    enum: ['UPI', 'Card', 'Cash', 'NetBanking','online'],
   },
   transactionId: {
     type: String,
   },
   amount: {
     type: Number,
-    required: true,
   },
   token: {
     type: String,

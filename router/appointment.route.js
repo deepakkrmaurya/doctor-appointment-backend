@@ -19,7 +19,7 @@ const router = express.Router();
 router.post(
   "/",
   authenticate,
-  authorize(["patient", "admin"]),
+  authorize(["patient", "admin",'hospital','doctor']),
   createAppointment
 );
 router.post('/verify',authenticate,verifyPayment);

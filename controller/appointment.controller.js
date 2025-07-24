@@ -21,35 +21,35 @@ export const createAppointment = async (req, res) => {
             date,
             slot,
             amount,
-            booking_amount
+            booking_amount,
+            paymentStatus
         } = req.body;
         //    console.log("Received appointment data:", req.body); // Debugging line
         // Validate required fields
         if (
-            !patientId ||
+            !patient ||
             !doctorId ||
             !hospitalId ||
             !date ||
             !slot ||
-            !amount ||
             !booking_amount
         ) {
             return res.status(400).json({ message: "All fields are required" });
         }
         // Debugging line
         // Check if the slot is available (you might want to add this logic)
-        const existingAppointment = await apponitment.findOne({
-            doctorId,
-            date,
-            slot,
-            status: { $ne: "cancelled" },
-        });
-        if (existingAppointment) {
-            return res.status(400).json({
-                success: false,
-                message: "Slot is already booked"
-            });
-        }
+        // const existingAppointment = await apponitment.findOne({
+        //     doctorId,
+        //     date,
+        //     slot,
+        //     status: { $ne: "cancelled" },
+        // });
+        // if (existingAppointment) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: "Slot is already booked"
+        //     });
+        // }
 
         const newAppointment = new apponitment({
             patient,
@@ -61,9 +61,10 @@ export const createAppointment = async (req, res) => {
             date,
             slot,
             amount,
-            booking_amount
-
+            booking_amount,
         });
+
+
 
         const savedAppointment = await newAppointment.save();
         const options = {
@@ -77,6 +78,11 @@ export const createAppointment = async (req, res) => {
         };
         const order = await razorpay.orders.create(options);
         newAppointment.razorpayOrderId = order.id;
+        if (paymentStatus) {
+            newAppointment.paymentMethod = paymentStatus
+            newAppointment.status = 'confirmed'
+            newAppointment.paymentStatus = 'completed'
+        }
         await newAppointment.save();
 
         return res.status(201).json({
@@ -87,6 +93,7 @@ export const createAppointment = async (req, res) => {
             savedAppointment
         });
     } catch (error) {
+        console.log(error.message)
         return res.status(500).json({ message: error.message });
     }
 };

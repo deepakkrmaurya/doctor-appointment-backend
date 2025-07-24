@@ -12,6 +12,6 @@ router.put("/:id", authorize(["admin",'hospital','doctor']) ,updateDoctor);
 router.delete("/:id", authenticate,  authorize(["admin",'hospital']),deleteDoctor);
 router.post("/:id/slots", authorize(["admin",'hospital','doctor']) ,addDoctorSlots);
 router.delete("/:id/slots", authorize(["admin",'hospital','doctor']) ,removeDoctorSlots);
-router.get("/:id/slots/:date", authorize(["admin",'hospital','doctor']) ,getDoctorSlotsByDate);
+router.get("/:id/slots/:date", authenticate ,authorize(["admin",'hospital','doctor']) ,getDoctorSlotsByDate);
 
 export default router;
