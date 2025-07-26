@@ -198,7 +198,6 @@ export const updateHospital = async (req, res) => {
       phone,
       email,
       website,
-      image,
       rating,
       specialties,
       facilities,
@@ -218,6 +217,8 @@ export const updateHospital = async (req, res) => {
       return res.status(400).json({ message: "Rating must be between 0 and 5" });
     }
 
+    
+
     hospital.name = name || hospital.name;
     hospital.address = address || hospital.address;
     hospital.city = city || hospital.city;
@@ -226,11 +227,12 @@ export const updateHospital = async (req, res) => {
     hospital.phone = phone || hospital.phone;
     hospital.email = email || hospital.email;
     hospital.website = website || hospital.website;
-    hospital.image = image || hospital.image;
     hospital.rating = rating || hospital.rating;
     hospital.specialties = specialties || hospital.specialties;
     hospital.facilities = facilities || hospital.facilities;
-
+    if(req.file){
+      hospital.image = process.env.APP_API_URL + "/" + req.file.path;
+    }
     const updatedHospital = await hospital.save();
     return res.status(200).json({
       success: true,

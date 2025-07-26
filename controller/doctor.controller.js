@@ -37,17 +37,17 @@ export const createDoctor = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-  //   console.log(availableSlots)
-  //  return
+    //   console.log(availableSlots)
+    //  return
     // Validate hospitalId
     if (!mongoose.Types.ObjectId.isValid(hospitalId)) {
       return res.status(400).json({ message: "Invalid hospital ID" });
     }
-    const existDoctor = await Doctor.findOne({email});
-    if(existDoctor){
+    const existDoctor = await Doctor.findOne({ email });
+    if (existDoctor) {
       return res.status(400).json({
-        success:false,
-        message:"email already registerd"
+        success: false,
+        message: "email already registerd"
       })
     }
     // Validate rating range
@@ -63,7 +63,7 @@ export const createDoctor = async (req, res) => {
         .status(400)
         .json({ message: "Consultation fee cannot be negative" });
     }
-      // console.log(availableSlots)
+    // console.log(availableSlots)
     // Validate available slots
     if (!Array.isArray(availableSlots) || availableSlots.length === 0) {
       return res
@@ -71,7 +71,7 @@ export const createDoctor = async (req, res) => {
         .json({ message: "At least one available slot is required" });
     }
     var slot = []
-    availableSlots.map((e)=>{
+    availableSlots.map((e) => {
       slot.push(JSON.parse(e));
       // console.log(JSON.parse(e))
     })
@@ -83,32 +83,32 @@ export const createDoctor = async (req, res) => {
       specialty,
       qualification,
       experience,
-      photo: process.env.APP_API_URL + '/'+  req.file.path,
+      photo: process.env.APP_API_URL + '/' + req.file.path,
       password,
       bio,
       email,
       rating,
       consultationFee,
       // availableSlots:JSON.parse(availableSlots),
-      availableSlots:slot,
+      availableSlots: slot,
     });
 
     const savedDoctor = await newDoctor.save();
-  return  res.status(201).json({
-    sucess:true,
-    message:"register successfully",
-    savedDoctor
-  });
+    return res.status(201).json({
+      sucess: true,
+      message: "register successfully",
+      savedDoctor
+    });
   } catch (error) {
-   return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
- export const Login = async (req, res) => {
+export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
     // Validate email and password
-     console.log(req.body)
+    console.log(req.body)
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
@@ -124,27 +124,27 @@ export const createDoctor = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
     // Generate a token (assuming you have a method to generate tokens)
-    const token =await doctor.generateAuthToken(); // Assuming you have a method to generate tokens
+    const token = await doctor.generateAuthToken(); // Assuming you have a method to generate tokens
     // Send response with doctor details and token
-   const doctorData = doctor.toObject();
+    const doctorData = doctor.toObject();
     delete doctorData.password; // Remove password from response 
-    
+
     const option = {
-      httpOnly:true,
-      secure:true
+      httpOnly: true,
+      secure: true
     }
-   return res.status(200)
-   .cookie('token',token,option)
-   .json({
-      success: true,
-      message: "Login successful",
-      user: doctorData,
-      token,
-    });
+    return res.status(200)
+      .cookie('token', token, option)
+      .json({
+        success: true,
+        message: "Login successful",
+        user: doctorData,
+        token,
+      });
   } catch (error) {
-   return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
- }
+}
 // Get all doctors
 export const getDoctors = async (req, res) => {
   try {
@@ -182,7 +182,7 @@ export const getDoctors = async (req, res) => {
 export const getDoctorById = async (req, res) => {
   try {
     const { id } = req.params;
-      
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid doctor ID" });
     }
@@ -206,7 +206,6 @@ export const updateDoctor = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid doctor ID" });
     }
@@ -231,22 +230,28 @@ export const updateDoctor = async (req, res) => {
 
     const updatedDoctor = await Doctor.findByIdAndUpdate(id, updateData, {
       new: true,
-    }).populate("hospitalId", "name location");
+    });
+    if (req.file) {
+      updatedDoctor.photo = process.env.APP_API_URL + "/" + req.file.path
+      await updatedDoctor.save()
+    }
 
     if (!updatedDoctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    res.status(200).json(updatedDoctor);
+    return res.status(200).json({
+      success: true,
+      message: "update successfully"
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-export  const getDoctorByHospitalId = (req, res) => {
+export const getDoctorByHospitalId = (req, res) => {
   try {
     const { hospitalId } = req.params;
-     console.log(hospitalId)
     if (!mongoose.Types.ObjectId.isValid(hospitalId)) {
       return res.status(400).json({ message: "Invalid hospital ID" });
     }
@@ -282,11 +287,12 @@ export const deleteDoctor = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-   return res.status(200).json({
-      success:true,
-      message: "Doctor deleted successfully" });
+    return res.status(200).json({
+      success: true,
+      message: "Doctor deleted successfully"
+    });
   } catch (error) {
-   return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -338,7 +344,6 @@ export const removeDoctorSlots = async (req, res) => {
   try {
     const { id } = req.params;
     const { date, slots } = req.body;
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid doctor ID" });
     }
@@ -377,7 +382,7 @@ export const removeDoctorSlots = async (req, res) => {
     }
 
     const updatedDoctor = await doctor.save();
-    res.status(200).json(updatedDoctor);
+   return res.status(200).json(updatedDoctor);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

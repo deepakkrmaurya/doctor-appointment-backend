@@ -154,3 +154,22 @@ export const deleteStaff = async (req, res) => {
         })
     }
 }
+
+export const getStaffByHospitalId = async(req,res)=>{
+    try {
+          const {hospital}=req.params;
+          const staff = await Staff.find({hospitalId:hospital})
+          if(!staff){
+            return res.status(400).json({
+                success:false,
+                message:"not found staff"
+            })
+          }
+          return res.status(200).json(staff)
+    } catch (error) {
+         return res.status(500).json({
+            success:false,
+            message:error.message
+         })
+    }
+}

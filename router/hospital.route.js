@@ -38,6 +38,7 @@ router.put(
   "/:id",
   authenticate,
   authorize(["admin",'hospital']),
+  upload.single('image'),
   updateHospital
 );
 router.put(

@@ -119,7 +119,7 @@ export const verifyPayment = async (req, res) => {
                 razorpayPaymentId: razorpay_payment_id,
                 razorpaySignature: razorpay_signature,
                 status: 'Confirmed',
-                paymentStatus: "Complete"
+                paymentStatus: "Completed"
             },
             { new: true }
         );
@@ -201,7 +201,7 @@ export const updateAppointmentStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-
+        console.log(status)
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid appointment ID" });
         }
@@ -211,6 +211,7 @@ export const updateAppointmentStatus = async (req, res) => {
         }
 
         const appointment = await apponitment.findById(id);
+        console.log(appointment)
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
@@ -229,7 +230,7 @@ export const updateAppointmentStatus = async (req, res) => {
         // }
 
         appointment.status = status;
-        const updatedAppointment = await appointment.save();
+        await appointment.save();
 
         return res.status(200).json({
             success: true,
