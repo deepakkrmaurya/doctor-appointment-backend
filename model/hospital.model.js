@@ -20,8 +20,8 @@ const HospitalSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum:['active','deactive'],
-    default:'active',
+    enum: ['active', 'deactive'],
+    default: 'active',
   },
   pincode: {
     type: String,
@@ -35,14 +35,14 @@ const HospitalSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  role:{
-    type:String,
-    required:true,
-    default:'hospital'
+  role: {
+    type: String,
+    required: true,
+    default: 'hospital'
   },
-  password:{
-    type:String,
-    required:true,
+  password: {
+    type: String,
+    required: true,
   },
   website: {
     type: String,
@@ -66,31 +66,32 @@ const HospitalSchema = new mongoose.Schema({
     type: [String],
     required: true,
   },
+  
 }, {
   timestamps: true,
 });
 
-HospitalSchema.pre('save',async function(next){
-  if(this.isModified('password')){
-    this.password = await bcrypt.hash(this.password,10)
+HospitalSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10)
   }
   next()
 })
 
-HospitalSchema.methods.comparePassword  =  async function(candidatePassword) {
-    try {
-        return await bcrypt.compare(candidatePassword,this.password)
-    } catch (error) {
+HospitalSchema.methods.comparePassword = async function (candidatePassword) {
+  try {
+    return await bcrypt.compare(candidatePassword, this.password)
+  } catch (error) {
     console.error('Error comparing passwords:', err);
     return false;
-    }
+  }
 }
 
-HospitalSchema.methods.generateAuthToken = async function() {
-     const token = await jwt.sign({ id: this._id, role:this.role, }, process.env.JWT_SECRET, {
-      expiresIn: '8h',
-    })
-    return token;
+HospitalSchema.methods.generateAuthToken = async function () {
+  const token = await jwt.sign({ id: this._id, role: this.role, }, process.env.JWT_SECRET, {
+    expiresIn: '8h',
+  })
+  return token;
 }
 
 export default mongoose.model('Hospital', HospitalSchema);

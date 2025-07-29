@@ -9,7 +9,7 @@ const AppointmentSchema = new mongoose.Schema({
     requred: true
   },
   dob: {
-    type: Date,
+    type: Number,
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -36,7 +36,7 @@ const AppointmentSchema = new mongoose.Schema({
   },
   slot: {
     type: String,
-    required: true,
+    // required: true,
   },
   status: {
     type: String,

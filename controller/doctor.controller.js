@@ -16,7 +16,7 @@ export const createDoctor = async (req, res) => {
       email,
       rating,
       consultationFee,
-      availableSlots,
+      // availableSlots,
     } = req.body;
 
     // console.log(req.body)
@@ -31,8 +31,7 @@ export const createDoctor = async (req, res) => {
       !password ||
       !bio ||
       rating === undefined ||
-      consultationFee === undefined ||
-      !availableSlots
+      consultationFee === undefined 
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -65,16 +64,16 @@ export const createDoctor = async (req, res) => {
     }
     // console.log(availableSlots)
     // Validate available slots
-    if (!Array.isArray(availableSlots) || availableSlots.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "At least one available slot is required" });
-    }
-    var slot = []
-    availableSlots.map((e) => {
-      slot.push(JSON.parse(e));
-      // console.log(JSON.parse(e))
-    })
+    // if (!Array.isArray(availableSlots) || availableSlots.length === 0) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "At least one available slot is required" });
+    // }
+    // var slot = []
+    // availableSlots.map((e) => {
+    //   slot.push(JSON.parse(e));
+    //   // console.log(JSON.parse(e))
+    // })
 
     // console.log(slot)
     const newDoctor = new Doctor({
@@ -90,7 +89,7 @@ export const createDoctor = async (req, res) => {
       rating,
       consultationFee,
       // availableSlots:JSON.parse(availableSlots),
-      availableSlots: slot,
+      // availableSlots: slot,
     });
 
     const savedDoctor = await newDoctor.save();

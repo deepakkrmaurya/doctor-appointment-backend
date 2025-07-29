@@ -31,7 +31,7 @@ export const authenticate = async (req, res, next) => {
     if (!user) {
       user = await Admin.findById(decoded.id).select("-password");
     }
-
+    // console.log(user)
     req.user = user;
     next();
 

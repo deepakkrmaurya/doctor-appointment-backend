@@ -19,7 +19,7 @@ export const createAppointment = async (req, res) => {
             doctorId,
             hospitalId,
             date,
-            slot,
+            // slot,
             amount,
             booking_amount,
             paymentStatus
@@ -31,7 +31,6 @@ export const createAppointment = async (req, res) => {
             !doctorId ||
             !hospitalId ||
             !date ||
-            !slot ||
             !booking_amount
         ) {
             return res.status(400).json({ message: "All fields are required" });
@@ -59,37 +58,18 @@ export const createAppointment = async (req, res) => {
             doctorId,
             hospitalId,
             date,
-            slot,
+            // slot,
             amount,
             booking_amount,
         });
-
-
-
         const savedAppointment = await newAppointment.save();
-        const options = {
-            amount: booking_amount * 100, // Amount in paise
-            currency: 'INR',
-            receipt: `appointment_${savedAppointment._id}`,
-            notes: {
-                appointment_id: savedAppointment._id.toString(),
-                customer_name: patient
-            }
-        };
-        const order = await razorpay.orders.create(options);
-        newAppointment.razorpayOrderId = order.id;
-        if (paymentStatus) {
-            newAppointment.paymentMethod = paymentStatus
-            newAppointment.status = 'confirmed'
-            newAppointment.paymentStatus = 'completed'
-        }
+        newAppointment.paymentMethod = 'Cash'
+        newAppointment.status = 'confirmed'
+        newAppointment.paymentStatus = 'pending'
         await newAppointment.save();
-
+        
         return res.status(201).json({
             success: true,
-            orderId: order.id,
-            amount: order.booking_amount,
-            currency: order.currency,
             savedAppointment
         });
     } catch (error) {
@@ -148,7 +128,10 @@ export const getAppointments = async (req, res) => {
             query.doctorId = _id;
         } else if (role === "hospital") {
             query.hospitalId = _id;
+        }else if (role === "staff") {
+            query.hospitalId = req.user.hospitalId;
         }
+       
         // Admin can see all appointments
         // console.log(query)
         const appointments = await apponitment.find(query)
@@ -323,7 +306,6 @@ export const getToDayAppointment = async (req, res) => {
         }
 
         if (req.user.role == 'staff') {
-            console.log(req.user.hospitalId)
             const appointment = await apponitment.find({
                 hospitalId: req.user.hospitalId,
                 createdAt: {
