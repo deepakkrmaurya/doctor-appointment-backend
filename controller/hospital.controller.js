@@ -2,8 +2,8 @@
 import doctorNodel from "../model/doctor.nodel.js";
 import Hospital from "../model/hospital.model.js";
 import mongoose from "mongoose";
-
-
+import fs from 'fs/promises'
+import  cloudinary  from 'cloudinary';
 export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -58,7 +58,7 @@ export const createHospital = async (req, res) => {
       email,
       password,
       website,
-     
+
       rating,
       specialties,
       facilities,
@@ -107,11 +107,29 @@ export const createHospital = async (req, res) => {
       email,
       password,
       website: website || "",
-      image: process.env.APP_API_URL + '/'+  req.file.path,
+      image: '',
       rating,
       specialties,
       facilities,
     });
+
+     if (req.file) {
+      if (req.file) {
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folders: 'MHAB',
+          width: 250,
+          height: 250,
+          gravity: 'faces',
+          crop: 'fill'
+        })
+        if (result) {
+          hospital.image = result.secure_url
+         
+          fs.rm(`uploads/${req.file.filename}`)
+        }
+      }
+      // hospital.image = process.env.APP_API_URL + "/" + req.file.path;
+    }
 
     const createdHospital = await hospital.save();
     return res.status(201).json(
@@ -202,7 +220,7 @@ export const updateHospital = async (req, res) => {
       specialties,
       facilities,
     } = req.body;
- 
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid hospital ID" });
     }
@@ -217,7 +235,7 @@ export const updateHospital = async (req, res) => {
       return res.status(400).json({ message: "Rating must be between 0 and 5" });
     }
 
-    
+
 
     hospital.name = name || hospital.name;
     hospital.address = address || hospital.address;
@@ -230,8 +248,22 @@ export const updateHospital = async (req, res) => {
     hospital.rating = rating || hospital.rating;
     hospital.specialties = specialties || hospital.specialties;
     hospital.facilities = facilities || hospital.facilities;
-    if(req.file){
-      hospital.image = process.env.APP_API_URL + "/" + req.file.path;
+    if (req.file) {
+      if (req.file) {
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folders: 'MHAB',
+          width: 250,
+          height: 250,
+          gravity: 'faces',
+          crop: 'fill'
+        })
+        if (result) {
+          hospital.image = result.secure_url
+         
+          fs.rm(`uploads/${req.file.filename}`)
+        }
+      }
+      // hospital.image = process.env.APP_API_URL + "/" + req.file.path;
     }
     const updatedHospital = await hospital.save();
     return res.status(200).json({

@@ -1,6 +1,7 @@
 import Doctor from "../model/doctor.nodel.js";
 import mongoose from "mongoose";
-
+import cloudinary from 'cloudinary'
+import fs from 'fs/promises'
 // Create a new doctor
 export const createDoctor = async (req, res) => {
   try {
@@ -82,7 +83,7 @@ export const createDoctor = async (req, res) => {
       specialty,
       qualification,
       experience,
-      photo: process.env.APP_API_URL + '/' + req.file.path,
+      photo: '',
       password,
       bio,
       email,
@@ -91,6 +92,23 @@ export const createDoctor = async (req, res) => {
       // availableSlots:JSON.parse(availableSlots),
       // availableSlots: slot,
     });
+
+    if (req.file) {
+          if (req.file) {
+            const result = await cloudinary.v2.uploader.upload(req.file.path, {
+              folders: 'MHAB',
+              width: 250,
+              height: 250,
+              gravity: 'faces',
+              crop: 'fill'
+            })
+            if (result) {
+              newDoctor.photo = result.secure_url
+             
+              fs.rm(`uploads/${req.file.filename}`)
+            }
+          }
+        }
 
     const savedDoctor = await newDoctor.save();
     return res.status(201).json({
@@ -230,10 +248,30 @@ export const updateDoctor = async (req, res) => {
     const updatedDoctor = await Doctor.findByIdAndUpdate(id, updateData, {
       new: true,
     });
-    if (req.file) {
-      updatedDoctor.photo = process.env.APP_API_URL + "/" + req.file.path
-      await updatedDoctor.save()
-    }
+
+     if (req.file) {
+          if (req.file) {
+            const result = await cloudinary.v2.uploader.upload(req.file.path, {
+              folders: 'MHAB',
+              width: 250,
+              height: 250,
+              gravity: 'faces',
+              crop: 'fill'
+            })
+            if (result) {
+              updatedDoctor.photo = result.secure_url
+             
+              fs.rm(`uploads/${req.file.filename}`)
+            }
+          }
+          // hospital.image = process.env.APP_API_URL + "/" + req.file.path;
+        }
+
+        await updatedDoctor.save()
+    // if (req.file) {
+    //   updatedDoctor.photo = process.env.APP_API_URL + "/" + req.file.path
+    //   await updatedDoctor.save()
+    // }
 
     if (!updatedDoctor) {
       return res.status(404).json({ message: "Doctor not found" });
