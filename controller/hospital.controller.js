@@ -92,10 +92,10 @@ export const createHospital = async (req, res) => {
     }
 
     // Check if hospital already exists
-    const hospitalExists = await Hospital.findOne({ email });
-    if (hospitalExists) {
-      return res.status(400).json({ message: "Hospital already exists" });
-    }
+    // const hospitalExists = await Hospital.findOne({ email });
+    // if (hospitalExists) {
+    //   return res.status(400).json({ message: "Hospital already exists" });
+    // }
 
     const hospital = new Hospital({
       name,
@@ -134,7 +134,7 @@ export const createHospital = async (req, res) => {
     const createdHospital = await hospital.save();
     return res.status(201).json(
       {
-        sucess: true,
+        success: true,
         message: "hospital create successfully",
         createdHospital
       }

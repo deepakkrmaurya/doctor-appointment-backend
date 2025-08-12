@@ -11,7 +11,7 @@ export const createDoctor = async (req, res) => {
       specialty,
       qualification,
       experience,
-      photo,
+      gender,
       password,
       bio,
       email,
@@ -29,6 +29,7 @@ export const createDoctor = async (req, res) => {
       !qualification ||
       experience === undefined ||
       !email ||
+      !gender ||
       !password ||
       !bio ||
       rating === undefined ||
@@ -85,6 +86,7 @@ export const createDoctor = async (req, res) => {
       experience,
       photo: '',
       password,
+      gender,
       bio,
       email,
       rating,

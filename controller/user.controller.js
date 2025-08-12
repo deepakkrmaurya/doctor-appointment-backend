@@ -1,3 +1,4 @@
+import hospitalModel from "../model/hospital.model.js";
 import User from "../model/user.model.js";
 import { sendOTP } from "../utils/SendOtp.js";
 
@@ -185,4 +186,22 @@ const appointment = async (req, res) => {
     }
 }
 
-export { login, Register, appointment }
+const getUser = async(req,res)=>{
+    try {
+          const user = req.user;
+          
+          const hospital = await hospitalModel.findById(user?.hospitalId)
+          return res.send({
+            user,
+            hospital
+          });
+    } catch (error) {
+         return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+}
+
+export { login, Register, appointment,getUser}

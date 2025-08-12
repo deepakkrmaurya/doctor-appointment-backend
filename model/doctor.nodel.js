@@ -28,6 +28,11 @@ const DoctorSchema = new mongoose.Schema({
     unique: true,
     match: /.+\@.+\..+/,
   },
+  gender: {
+    type: String,
+    required: true,
+  },
+
   password: {
     type: String,
     required: true,
@@ -58,7 +63,6 @@ const DoctorSchema = new mongoose.Schema({
   },
   photo: {
     type: String,
-    required: true,
   },
   bio: {
     type: String,
