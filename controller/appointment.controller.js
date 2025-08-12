@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config()
 import mongoose from "mongoose";
 import apponitment from "../model/apponitment.js";
+import User from '../model/user.model.js';
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET
@@ -67,7 +68,7 @@ export const createAppointment = async (req, res) => {
         newAppointment.status = 'confirmed'
         newAppointment.paymentStatus = 'pending'
         await newAppointment.save();
-        
+
         return res.status(201).json({
             success: true,
             savedAppointment
@@ -120,24 +121,30 @@ export const verifyPayment = async (req, res) => {
 export const getAppointments = async (req, res) => {
     try {
         const { role, _id } = req.user;
+        const user = await User.findById(_id)
         let query = {};
         // Filter based on user role
         if (role === "patient") {
-            query.patientId = _id;
+            query = {
+                $or: [
+                    { patientId: _id },
+                    { mobile: user?.userid }
+                ]
+            };
+
         } else if (role === "doctor") {
             query.doctorId = _id;
         } else if (role === "hospital") {
             query.hospitalId = _id;
-        }else if (role === "staff") {
+        } else if (role === "staff") {
             query.hospitalId = req.user.hospitalId;
         }
-       
         // Admin can see all appointments
-        // console.log(query)
         const appointments = await apponitment.find(query)
-            .populate("patientId", "name email")
-            .populate("doctorId", "name specialization")
+        // .populate("userid", "name email")
+        // .populate("doctorId", "name specialization")
         // .populate("hospitalId", "name location");
+        
         return res.status(200).json(appointments);
     } catch (error) {
         res.status(500).json({ message: error.message });
