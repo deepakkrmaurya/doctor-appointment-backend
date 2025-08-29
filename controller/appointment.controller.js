@@ -140,11 +140,26 @@ export const getAppointments = async (req, res) => {
             query.hospitalId = req.user.hospitalId;
         }
         // Admin can see all appointments
-        const appointments = await apponitment.find(query)
+
+        const appointments = await apponitment.find(query).sort({ createdAt: -1 });
+        // const appointments = appoint.map(app => {
+        //     if (app.status === "completed") {
+        //         return {
+        //             ...app.toObject(),
+        //             finalStatus: "completed"
+        //         };
+        //     }
+
+        //     const isActive = new Date(app.createdAt) > new Date();
+        //     return {
+        //         ...app.toObject(),
+        //         finalStatus: isActive ? "Active" : "Inactive"
+        //     };
+        // });
         // .populate("userid", "name email")
         // .populate("doctorId", "name specialization")
         // .populate("hospitalId", "name location");
-        
+
         return res.status(200).json(appointments);
     } catch (error) {
         res.status(500).json({ message: error.message });
