@@ -150,7 +150,6 @@ export const getHospitals = async (req, res) => {
   try {
     const { city, state, specialty, minRating, name } = req.query;
     let query = {};
-
     // Filter by city if provided
     if (city) {
       query.city = { $regex: city, $options: "i" };
@@ -176,7 +175,7 @@ export const getHospitals = async (req, res) => {
       query.rating = { $gte: parseFloat(minRating) };
     }
 
-    const hospitals = await Hospital.find(query).sort({ rating: -1 });
+    const hospitals = await Hospital.find(query).sort({ rating: -1 }).select('-password');
     return res.status(200).json(hospitals);
   } catch (error) {
     return res.status(500).json({ message: error.message });
