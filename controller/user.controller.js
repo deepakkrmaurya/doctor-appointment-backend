@@ -15,32 +15,34 @@ const login = async (req, res) => {
                 message: 'userid is required'
             });
         }
-        const user = await User.findOne({ userid });
+        let user = await User.findOne({ userid });
         if (!user) {
             const otp = await generate4DigitOTP();
-            const newUser = await User.create({
+            user = await User.create({
                 userid,
                 otp,
                 otpExp: Date.now()
             })
-            await newUser.save();
-            // await sendOTP(userid, newUser.otp)
-            return res.status(201).json({
-                success: true,
-                message: "otp send your",
-                otp: newUser.otp
-            })
+            await user.save();
+
         }
-        const otp = await generate4DigitOTP();
-        user.otp = otp;
-        user.otpExp = Date.now();
-        await user.save()
-        // await sendOTP(userid, otp)
-        return res.status(201).json({
-            success: true,
-            message: "otp send your",
-            otp: user.otp
-        })
+
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+            maxAge: 24 * 60 * 60 * 1000
+        };
+
+        const token = await user.generateJWTToken();
+        return res
+            .cookie('token', token, options)
+            .json({
+                success: true,
+                message: "Login successfully",
+                token: token,
+                user: user
+            });
     } catch (error) {
         return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
@@ -186,17 +188,17 @@ const appointment = async (req, res) => {
     }
 }
 
-const getUser = async(req,res)=>{
+const getUser = async (req, res) => {
     try {
-          const user = req.user;
-          
-          const hospital = await hospitalModel.findById(user?.hospitalId)
-          return res.send({
+        const user = req.user;
+
+        const hospital = await hospitalModel.findById(user?.hospitalId)
+        return res.send({
             user,
             hospital
-          });
+        });
     } catch (error) {
-         return res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'Internal server error',
             error: error.message
@@ -204,4 +206,4 @@ const getUser = async(req,res)=>{
     }
 }
 
-export { login, Register, appointment,getUser}
+export { login, Register, appointment, getUser }
