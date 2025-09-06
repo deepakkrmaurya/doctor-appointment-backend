@@ -170,15 +170,14 @@ export const getAppointments = async (req, res) => {
 export const getAppointmentById = async (req, res) => {
     try {
         const { id } = req.params;
-
+        console.log(id)
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid appointment ID" });
         }
-
         const appointments = await apponitment.findById(id)
             .populate("patientId", "name email mobile")
             .populate("doctorId", "name specialty experience")
-            .populate("hospitalId", "name location address phone");
+            .populate("hospitalId", "name email location address phone city state");
 
         if (!appointments) {
             return res.status(404).json({ message: "Appointment not found" });
@@ -472,5 +471,17 @@ export const getAppointmentBydoctorIdAndHospitalIdAndAdminId = async (req, res) 
         });
     } catch (error) {
         return res.status(500).json({ message: error.message });
+    }
+}
+
+export const getAppointmentByAppointmentId = async (req,res)=>{
+    try {
+         const {patientId,doctorId,hospitalId}=req.params;
+         return res.send(req.params)
+    } catch (error) {
+         return res.status(500).json({
+            success:false,
+            message:error.message
+         })
     }
 }

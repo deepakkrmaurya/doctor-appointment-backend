@@ -10,6 +10,7 @@ import {
   getToDayAppointment,
   getAppointmentBydoctorIdAndHospitalIdAndAdminId,
   verifyPayment,
+  getAppointmentByAppointmentId,
 } from "../controller/appointment.controller.js";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
 
@@ -67,4 +68,7 @@ router.get('/appointment',
   authenticate,
   authorize(["admin", "doctor", 'hospital'], getAppointmentBydoctorIdAndHospitalIdAndAdminId),
 )
+
+router.get('/:patientId/:doctorId/:hospitalId', getAppointmentByAppointmentId)
+
 export default router;
