@@ -3,7 +3,7 @@ import doctorNodel from "../model/doctor.nodel.js";
 import Hospital from "../model/hospital.model.js";
 import mongoose from "mongoose";
 import fs from 'fs/promises'
-import  cloudinary  from 'cloudinary';
+import cloudinary from 'cloudinary';
 export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -113,7 +113,7 @@ export const createHospital = async (req, res) => {
       facilities,
     });
 
-     if (req.file) {
+    if (req.file) {
       if (req.file) {
         const result = await cloudinary.v2.uploader.upload(req.file.path, {
           folders: 'MHAB',
@@ -124,7 +124,7 @@ export const createHospital = async (req, res) => {
         })
         if (result) {
           hospital.image = result.secure_url
-         
+
           fs.rm(`uploads/${req.file.filename}`)
         }
       }
@@ -258,7 +258,7 @@ export const updateHospital = async (req, res) => {
         })
         if (result) {
           hospital.image = result.secure_url
-         
+
           fs.rm(`uploads/${req.file.filename}`)
         }
       }
@@ -277,7 +277,6 @@ export const updateHospital = async (req, res) => {
 
 export const updateStatus = async (req, res) => {
   try {
-    const { status } = req.body;
     const { _id } = req.user;
 
     const { id } = req.params
@@ -289,11 +288,11 @@ export const updateStatus = async (req, res) => {
         message: 'Invalid hospital id'
       })
     }
-    verifyHospital.status = status;
+    verifyHospital.status = !verifyHospital.status;
     await verifyHospital.save()
     return res.status(200).json({
       success: true,
-      message: `${status} successfully`
+      message: `${!verifyHospital.status} successfully`
     })
   } catch (error) {
     return res.status(500).json({
@@ -302,6 +301,71 @@ export const updateStatus = async (req, res) => {
     })
   }
 }
+
+// export const updateStatusByHospitalId = async (req, res) => {
+//   try {
+//     const { deactivationReason, status } = req.body;
+
+//     const { id } = req.params
+//     console.log(id)
+//     console.log(req.body)
+//     const hospital = await Hospital.findById(id);
+//     hospital.deactivationReason = deactivationReason
+//     hospital.status = status
+//     const doctor = await doctorNodel.find({ hospitalId: hospital._id })
+//     doctor.map((d) => {
+//       d.status = status
+//     });
+//     await hospital.save()
+//     await doctor.save()
+//     return res.status(200).json({
+//       success: true,
+//       message: `${status} successfully`
+//     })
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message
+//     })
+//   }
+// }
+
+export const updateStatusByHospitalId = async (req, res) => {
+  try {
+    const { deactivationReason, status } = req.body;
+    const { id } = req.params;
+    // Find hospital
+    const hospital = await Hospital.findById(id);
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: "Hospital not found",
+      });
+    }
+
+    // Update hospital
+    hospital.deactivationReason = deactivationReason;
+    hospital.status = status;
+    await hospital.save();
+
+    // Update all doctors linked to this hospital in one go
+    await doctorNodel.updateMany(
+      { hospitalId: hospital._id },
+      { $set: { status } }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `${status} successfully`,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 
 export const deleteHospital = async (req, res) => {
   try {

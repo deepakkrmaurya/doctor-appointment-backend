@@ -33,7 +33,7 @@ export const createDoctor = async (req, res) => {
       !password ||
       !bio ||
       rating === undefined ||
-      consultationFee === undefined 
+      consultationFee === undefined
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -96,21 +96,21 @@ export const createDoctor = async (req, res) => {
     });
 
     if (req.file) {
-          if (req.file) {
-            const result = await cloudinary.v2.uploader.upload(req.file.path, {
-              folders: 'MHAB',
-              width: 250,
-              height: 250,
-              gravity: 'faces',
-              crop: 'fill'
-            })
-            if (result) {
-              newDoctor.photo = result.secure_url
-             
-              fs.rm(`uploads/${req.file.filename}`)
-            }
-          }
+      if (req.file) {
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folders: 'MHAB',
+          width: 250,
+          height: 250,
+          gravity: 'faces',
+          crop: 'fill'
+        })
+        if (result) {
+          newDoctor.photo = result.secure_url
+
+          fs.rm(`uploads/${req.file.filename}`)
         }
+      }
+    }
 
     const savedDoctor = await newDoctor.save();
     return res.status(201).json({
@@ -251,25 +251,25 @@ export const updateDoctor = async (req, res) => {
       new: true,
     });
 
-     if (req.file) {
-          if (req.file) {
-            const result = await cloudinary.v2.uploader.upload(req.file.path, {
-              folders: 'MHAB',
-              width: 250,
-              height: 250,
-              gravity: 'faces',
-              crop: 'fill'
-            })
-            if (result) {
-              updatedDoctor.photo = result.secure_url
-             
-              fs.rm(`uploads/${req.file.filename}`)
-            }
-          }
-          // hospital.image = process.env.APP_API_URL + "/" + req.file.path;
-        }
+    if (req.file) {
+      if (req.file) {
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folders: 'MHAB',
+          width: 250,
+          height: 250,
+          gravity: 'faces',
+          crop: 'fill'
+        })
+        if (result) {
+          updatedDoctor.photo = result.secure_url
 
-        await updatedDoctor.save()
+          fs.rm(`uploads/${req.file.filename}`)
+        }
+      }
+      // hospital.image = process.env.APP_API_URL + "/" + req.file.path;
+    }
+
+    await updatedDoctor.save()
     // if (req.file) {
     //   updatedDoctor.photo = process.env.APP_API_URL + "/" + req.file.path
     //   await updatedDoctor.save()
@@ -378,6 +378,30 @@ export const addDoctorSlots = async (req, res) => {
   }
 };
 
+export const updateStatusByDoctorId = async (req, res) => {
+  try {
+    const { deactivationReason } = req.body;
+    const { id } = req.params;
+    const doctor = await Doctor.findById(id);
+    if (!doctor) {
+      return res.status(400).json({
+        success: false,
+        message: "doctor not found"
+      });
+    }
+
+    doctor.deactivationReason = deactivationReason
+    doctor.status = !doctor.status;
+    await doctor.save()
+    return res.status(200).json({
+      success: true,
+      message: "doctor status update"
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
+
 // Remove slots from a doctor's availability
 export const removeDoctorSlots = async (req, res) => {
   try {
@@ -421,7 +445,7 @@ export const removeDoctorSlots = async (req, res) => {
     }
 
     const updatedDoctor = await doctor.save();
-   return res.status(200).json(updatedDoctor);
+    return res.status(200).json(updatedDoctor);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

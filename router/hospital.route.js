@@ -8,6 +8,7 @@ import {
   deleteHospital,
   Login,
   updateStatus,
+  updateStatusByHospitalId,
 } from "../controller/hospital.controller.js";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
 import upload from "../middleware/multer.js";
@@ -46,6 +47,12 @@ router.put(
   authenticate,
   authorize(["admin"]),
   updateStatus
+);
+router.patch(
+  "/:id/status",
+  authenticate,
+  authorize(["admin",'hospital']),
+  updateStatusByHospitalId
 );
 // Delete hospital (Admin access)
 router.delete(

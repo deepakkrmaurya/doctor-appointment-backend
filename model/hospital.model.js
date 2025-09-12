@@ -19,9 +19,8 @@ const HospitalSchema = new mongoose.Schema({
     required: true,
   },
   status: {
-    type: String,
-    enum: ['active', 'deactive'],
-    default: 'active',
+    type: Boolean,
+    default:true
   },
   pincode: {
     type: String,
@@ -47,6 +46,9 @@ const HospitalSchema = new mongoose.Schema({
   website: {
     type: String,
     required: false,
+  },
+  deactivationReason: {
+    type: String,
   },
   image: {
     type: String,

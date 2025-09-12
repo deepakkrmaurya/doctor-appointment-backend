@@ -36,10 +36,10 @@ const DoctorSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    select: false, 
+    select: false,
 
   },
-  role:{
+  role: {
     type: String,
     enum: ['doctor'],
     default: 'doctor',
@@ -57,9 +57,9 @@ const DoctorSchema = new mongoose.Schema({
     required: true,
   },
   status: {
-    type: String,
-    enum:['active','deactive'],
-    default:'active',
+    type: Boolean,
+    // enum: ['active', 'deactive'],
+    default: true,
   },
   photo: {
     type: String,
@@ -78,11 +78,14 @@ const DoctorSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  deactivationReason: {
+    type: String,
+  },
   availableSlots: {
     type: [SlotSchema],
     required: true,
   },
-}, {
+},{
   timestamps: true,
 });
 
@@ -94,7 +97,7 @@ DoctorSchema.pre('save', async function (next) {
   next();
 });
 
-DoctorSchema.methods.comparePassword = async function(candidatePassword) {
+DoctorSchema.methods.comparePassword = async function (candidatePassword) {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (err) {
@@ -103,9 +106,9 @@ DoctorSchema.methods.comparePassword = async function(candidatePassword) {
   }
 };
 
-DoctorSchema.methods.generateAuthToken =async function() {
+DoctorSchema.methods.generateAuthToken = async function () {
   const token
-    =await jwt.sign({ id: this._id, role:this.role, }, process.env.JWT_SECRET, {
+    = await jwt.sign({ id: this._id, role: this.role, }, process.env.JWT_SECRET, {
       expiresIn: '8h',
     });
   return token;
