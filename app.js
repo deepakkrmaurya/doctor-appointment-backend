@@ -23,7 +23,7 @@ const app = express();
 // Enhanced CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? 'https://doctor-appointment-client-gray.vercel.app'
+    ? 'https://hummarichikitsa.vercel.app'
     : 'http://localhost:5173',
 
   credentials: true,
