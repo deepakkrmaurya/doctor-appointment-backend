@@ -2,12 +2,12 @@ import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 const userSchema = new mongoose.Schema({
-    // name: {
-    //     type: String,
-    //     minlength: 3,
-    //     maxlength: 20,
-
-    // },
+    user_first_name: {
+        type: String,
+    },
+    user_last_name: {
+        type: String,
+    },
     userid: {
         type: String,
         unique: true,
@@ -15,17 +15,16 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         // match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     },
-    // mobile: {
+    email: {
+        type: String,
+        unique: true,
+    },
+    //  otp: {
     //     type: Number,
-    //     unique: true,
-    //     match: /^\d{10}$/
     // },
-     otp: {
-        type: Number,
-    },
-     otpExp: {
-        type: Date,
-    },
+    //  otpExp: {
+    //     type: Date,
+    // },
     // password: {
     //     type: String,
     //     required: true,
@@ -34,7 +33,7 @@ const userSchema = new mongoose.Schema({
 
     role: {
         type: String,
-        enum: ['patient', 'admin'],
+        enum: ['patient'],
         required: true,
         default: 'patient'
     },

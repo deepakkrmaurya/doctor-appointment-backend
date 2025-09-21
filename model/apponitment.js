@@ -9,7 +9,7 @@ const AppointmentSchema = new mongoose.Schema({
     requred: true
   },
   dob: {
-    type: Number,
+    type: String,
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -41,7 +41,7 @@ const AppointmentSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['confirmed', 'cancelled', 'completed', 'pending'],
-    default: 'pending',
+    default: 'confirmed',
     required: true,
     
   },
@@ -61,10 +61,13 @@ const AppointmentSchema = new mongoose.Schema({
   amount: {
     type: Number,
   },
+  appointmentNumber:{
+    type: Number,
+  },
   token: {
     type: String,
-    unique: true,
-    index: true, // Improves query performance
+    // unique: true,
+    // index: true, // Improves query performance
     default: function () {
       return "TEMP-" + Math.random().toString(36).substring(2, 10); // Temporary unique ID
     }
@@ -117,7 +120,39 @@ AppointmentSchema.pre('save', async function (next) {
   next();
 });
 
+
+
 // Helper functions
+AppointmentSchema.pre('save', async function (next) {
+  try {
+    // Only assign appointmentNumber if not already set
+    if (!this.appointmentNumber) {
+      const todayStart = new Date(this.date);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(todayStart);
+      todayEnd.setHours(23, 59, 59, 999);
+
+      // Find last appointment for same doctor on the same day
+      const lastAppointment = await this.constructor.findOne({
+        doctorId: this.doctorId,
+        date: { $gte: todayStart.toISOString(), $lte: todayEnd.toISOString() }
+      }).sort({ appointmentNumber: -1 });
+
+      if (lastAppointment && lastAppointment.appointmentNumber) {
+        this.appointmentNumber = lastAppointment.appointmentNumber + 1;
+      } else {
+        this.appointmentNumber = 1; // First appointment for the doctor today
+      }
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+
+
 function generateNewToken() {
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   return `AP-${dateStr}-001`; // Starting sequence

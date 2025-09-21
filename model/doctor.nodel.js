@@ -52,6 +52,14 @@ const DoctorSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  currentAppointment: {
+    type: Number,
+   
+  },
+  totalAppointments: {
+    type: Number,
+   
+  },
   experience: {
     type: Number,
     required: true,

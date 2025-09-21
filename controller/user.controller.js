@@ -8,7 +8,12 @@ async function generate4DigitOTP() {
 
 const login = async (req, res) => {
     try {
-        const { userid } = req.body;
+        const { user_phone_number: userid, user_json_url } = req.body.userObj;
+        // console.log(req.body.userObj)
+        // console.log(userid)
+        // console.log(user_json_url)
+        const use = await fetch(user_json_url)
+
         if (!userid) {
             return res.status(400).json({
                 success: false,
@@ -17,11 +22,11 @@ const login = async (req, res) => {
         }
         let user = await User.findOne({ userid });
         if (!user) {
-            const otp = await generate4DigitOTP();
+            const { user_first_name, user_last_name } = await use.json()
             user = await User.create({
                 userid,
-                otp,
-                otpExp: Date.now()
+                user_first_name,
+                user_last_name
             })
             await user.save();
 
@@ -33,7 +38,6 @@ const login = async (req, res) => {
             secure: true,
             maxAge: 24 * 60 * 60 * 1000
         };
-
         const token = await user.generateJWTToken();
         return res
             .cookie('token', token, options)
@@ -197,6 +201,21 @@ const getUser = async (req, res) => {
             user,
             hospital
         });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+}
+
+export const updateProfile = async (req,res) => {
+    try {
+        const user = req.user;
+        console.log(req.body)
+        return
+
     } catch (error) {
         return res.status(500).json({
             success: false,

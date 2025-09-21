@@ -5,12 +5,16 @@ dotenv.config()
 import mongoose from "mongoose";
 import apponitment from "../model/apponitment.js";
 import User from '../model/user.model.js';
+import io from '../index.js';
+import doctorNodel from '../model/doctor.nodel.js';
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 // Create a new appointment
 export const createAppointment = async (req, res) => {
+    const today = new Date();
+    const formatted = today.toISOString().split("T")[0];
     try {
         const {
             patient,
@@ -65,10 +69,11 @@ export const createAppointment = async (req, res) => {
         });
         const savedAppointment = await newAppointment.save();
         newAppointment.paymentMethod = 'Cash'
-        newAppointment.status = 'confirmed'
         newAppointment.paymentStatus = 'pending'
         await newAppointment.save();
-
+        if(date==formatted){
+            io.emit("createAppointment", savedAppointment)
+        }
         return res.status(201).json({
             success: true,
             savedAppointment
@@ -141,24 +146,9 @@ export const getAppointments = async (req, res) => {
         }
         // Admin can see all appointments
 
-        const appointments = await apponitment.find(query).sort({ createdAt: -1 });
-        // const appointments = appoint.map(app => {
-        //     if (app.status === "completed") {
-        //         return {
-        //             ...app.toObject(),
-        //             finalStatus: "completed"
-        //         };
-        //     }
-
-        //     const isActive = new Date(app.createdAt) > new Date();
-        //     return {
-        //         ...app.toObject(),
-        //         finalStatus: isActive ? "Active" : "Inactive"
-        //     };
-        // });
-        // .populate("userid", "name email")
-        // .populate("doctorId", "name specialization")
-        // .populate("hospitalId", "name location");
+        const appointments = await apponitment.find(query)
+            .populate("doctorId", "currentAppointment")
+            .sort({ createdAt: -1 });
 
         return res.status(200).json(appointments);
     } catch (error) {
@@ -170,7 +160,6 @@ export const getAppointments = async (req, res) => {
 export const getAppointmentById = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log(id)
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid appointment ID" });
         }
@@ -203,9 +192,9 @@ export const getAppointmentById = async (req, res) => {
 // Update appointment status
 export const updateAppointmentStatus = async (req, res) => {
     try {
+        const user = req.user
         const { id } = req.params;
         const { status } = req.body;
-        console.log(status)
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid appointment ID" });
         }
@@ -214,32 +203,23 @@ export const updateAppointmentStatus = async (req, res) => {
             return res.status(400).json({ message: "Invalid status value" });
         }
 
+
         const appointment = await apponitment.findById(id);
-        console.log(appointment)
+
+        const updatedDoctor = await doctorNodel.findByIdAndUpdate(
+            user._id,
+            { currentAppointment: appointment.appointmentNumber },
+            { new: true }
+        );
+ 
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
-
-        // Check permissions (only doctor, hospital admin, or patient can update status)
-        // const { role, _id } = req.user;
-        //   console.log(mongoose.Types.ObjectId.isValid(id))
-        // const isAuthorized =
-        //     role === "admin" ||
-        //     appointment.patientId.toString() === _id ||
-        //     appointment.doctorId.toString() === _id ||
-        //     appointment.hospitalId.toString() === _id;
-
-        // if (!isAuthorized) {
-        //     return res.status(403).json({ message: "Unauthorized access" });
-        // }
-
         appointment.status = status;
-        await appointment.save();
-
-        return res.status(200).json({
-            success: true,
-            message: "Appointment confirmed"
-        });
+        const newAppointment = await appointment.save();
+        io.emit("appointmentUpdate", newAppointment);
+        io.emit("doctorUpdate", updatedDoctor);
+        return res.json(appointment)
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -289,50 +269,36 @@ export const getToDayAppointment = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(doctorId)) {
             return res.status(400).json({ message: "Invalid doctor ID" });
         }
-
         // Get start and end of today
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of day (00:00:00)
-
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1); // Start of next day
-
-
+        const formatted = today.toISOString().split("T")[0];
         // Get all appointments for this doctor created today that aren't cancelled
         let appointments = null;
         if (req.user.role == 'hospital') {
             const appointment = await apponitment.find({
                 hospitalId: doctorId,
-                createdAt: {
-                    $gte: today,  // Greater than or equal to start of today
-                    $lt: tomorrow // Less than start of tomorrow
-                },
+                date: formatted,
                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
             });
 
             appointments = appointment
         }
         if (req.user.role == 'doctor') {
-            console.log(req.user.role)
+
             const appointment = await apponitment.find({
                 doctorId,
-                createdAt: {
-                    $gte: today,  // Greater than or equal to start of today
-                    $lt: tomorrow // Less than start of tomorrow
-                },
+                date: formatted,
                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
             });
 
             appointments = appointment
+            
         }
 
         if (req.user.role == 'staff') {
             const appointment = await apponitment.find({
                 hospitalId: req.user.hospitalId,
-                createdAt: {
-                    $gte: today,  // Greater than or equal to start of today
-                    $lt: tomorrow // Less than start of tomorrow
-                },
+                createdAt: formatted,
                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
             });
             appointments = appointment
@@ -340,10 +306,7 @@ export const getToDayAppointment = async (req, res) => {
 
         if (req.user.role == 'admin') {
             const appointment = await apponitment.find({
-                createdAt: {
-                    $gte: today,  // Greater than or equal to start of today
-                    $lt: tomorrow // Less than start of tomorrow
-                },
+                createdAt: formatted,
                 status: { $ne: 'cancelled' }
             });
 
@@ -474,14 +437,14 @@ export const getAppointmentBydoctorIdAndHospitalIdAndAdminId = async (req, res) 
     }
 }
 
-export const getAppointmentByAppointmentId = async (req,res)=>{
+export const getAppointmentByAppointmentId = async (req, res) => {
     try {
-         const {patientId,doctorId,hospitalId}=req.params;
-         return res.send(req.params)
+        const { patientId, doctorId, hospitalId } = req.params;
+        return res.send(req.params)
     } catch (error) {
-         return res.status(500).json({
-            success:false,
-            message:error.message
-         })
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
     }
 }

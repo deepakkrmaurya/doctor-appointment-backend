@@ -5,22 +5,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors'
 import fetch from "node-fetch";
 const app = express();
-// const corsOptions = {
-//     // origin: process.env.NODE_ENV === 'production'
-//     //     ? 'https://your-production-client.com'
-//     //     : 'http://localhost:5173',
-//     origin:"http://localhost:5173",
-//     credentials: true,
-//     // methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//     // allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-//     // exposedHeaders: ['Authorization']
-// };
 
-// app.use(cors(corsOptions));
-
-// Handle preflight requests
-// app.options('*', cors(corsOptions));
-// Enhanced CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? 'https://hummarichikitsa.vercel.app'
