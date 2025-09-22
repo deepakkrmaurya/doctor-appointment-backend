@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import counterModel from "./counter.model.js";
 const AppointmentSchema = new mongoose.Schema({
   patient: {
     type: String,
@@ -123,26 +124,48 @@ AppointmentSchema.pre('save', async function (next) {
 
 
 // Helper functions
-AppointmentSchema.pre('save', async function (next) {
+// AppointmentSchema.pre('save', async function (next) {
+//   try {
+//     // Only assign appointmentNumber if not already set
+//     if (!this.appointmentNumber) {
+//       const todayStart = new Date(this.date);
+//       todayStart.setHours(0, 0, 0, 0);
+//       const todayEnd = new Date(todayStart);
+//       todayEnd.setHours(23, 59, 59, 999);
+
+//       // Find last appointment for same doctor on the same day
+//       const lastAppointment = await this.constructor.findOne({
+//         doctorId: this.doctorId,
+//         date: { $gte: todayStart.toISOString(), $lte: todayEnd.toISOString() }
+//       }).sort({ appointmentNumber: -1 });
+
+//       if (lastAppointment && lastAppointment.appointmentNumber) {
+//         this.appointmentNumber = lastAppointment.appointmentNumber + 1;
+//       } else {
+//         this.appointmentNumber = 1; // First appointment for the doctor today
+//       }
+//     }
+//     next();
+//   } catch (err) {
+//     next(err);
+//   }
+// });
+
+
+
+AppointmentSchema.pre("save", async function (next) {
   try {
-    // Only assign appointmentNumber if not already set
     if (!this.appointmentNumber) {
-      const todayStart = new Date(this.date);
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date(todayStart);
-      todayEnd.setHours(23, 59, 59, 999);
+      // Normalize date (only yyyy-mm-dd)
+      const dateKey = new Date(this.date).toISOString().split("T")[0];
 
-      // Find last appointment for same doctor on the same day
-      const lastAppointment = await this.constructor.findOne({
-        doctorId: this.doctorId,
-        date: { $gte: todayStart.toISOString(), $lte: todayEnd.toISOString() }
-      }).sort({ appointmentNumber: -1 });
+      const counter = await counterModel.findOneAndUpdate(
+        { doctorId: this.doctorId, date: dateKey },
+        { $inc: { seq: 1 } }, // atomic increment
+        { new: true, upsert: true } // create if not exists
+      );
 
-      if (lastAppointment && lastAppointment.appointmentNumber) {
-        this.appointmentNumber = lastAppointment.appointmentNumber + 1;
-      } else {
-        this.appointmentNumber = 1; // First appointment for the doctor today
-      }
+      this.appointmentNumber = counter.seq;
     }
     next();
   } catch (err) {
