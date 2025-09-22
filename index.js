@@ -18,7 +18,9 @@ const server = http.createServer(app);
 // ✅ Socket.io setup
 const io = new Server(server, {
     cors: {
-        origin: "https://hummarichikitsa.vercel.app",
+        origin: process.env.NODE_ENV === 'production'
+            ? 'https://hummarichikitsa.vercel.app'
+            : 'http://localhost:5173',
         methods: ["GET", "POST"],
     },
 });

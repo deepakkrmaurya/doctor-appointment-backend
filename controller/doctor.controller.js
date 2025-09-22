@@ -1,7 +1,11 @@
 import Doctor from "../model/doctor.nodel.js";
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 import cloudinary from 'cloudinary'
 import fs from 'fs/promises'
+import io from "../index.js";
+import doctorNodel from "../model/doctor.nodel.js";
+import hospitalModel from "../model/hospital.model.js";
 // Create a new doctor
 export const createDoctor = async (req, res) => {
   try {
@@ -393,6 +397,7 @@ export const updateStatusByDoctorId = async (req, res) => {
     doctor.deactivationReason = deactivationReason
     doctor.status = !doctor.status;
     await doctor.save()
+    io.emit('doctorStatusUpdate',doctor)
     return res.status(200).json({
       success: true,
       message: "doctor status update"
@@ -482,3 +487,39 @@ export const getDoctorSlotsByDate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const ChangePassword = async(req,res)=>{
+  try {
+    const user = req.user;
+    const {currentPassword,newPassword}=req.body;
+
+    if(!currentPassword || !newPassword){
+      return res.status(400).json({
+        success:false,
+        message:"password is required"
+      })
+    }
+    var getUser = null
+     getUser = await doctorNodel.findById(user._id).select('+password')
+     if(!getUser){
+       getUser = await hospitalModel.findById(user._id).select('+password')
+     }
+
+     const verifyPassword= await bcrypt.compare(currentPassword,getUser.password)
+     if(!verifyPassword){
+      return res.status(400).json({
+        success:false,
+        message:"Invalid old password"
+      })
+     }
+     getUser.password = newPassword
+     await getUser.save()
+     return res.status(200).json({
+        success:true,
+        message:"password change success"
+      })
+
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}

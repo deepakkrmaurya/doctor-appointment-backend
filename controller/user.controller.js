@@ -212,9 +212,21 @@ const getUser = async (req, res) => {
 
 export const updateProfile = async (req,res) => {
     try {
-        const user = req.user;
-        console.log(req.body)
-        return
+        const use = req.user;
+        const {user_first_name,user_last_name,email}= req.body;
+       const user =   await User.findByIdAndUpdate(use._id,{
+              user_first_name,
+              user_last_name,
+              email
+        })
+
+        await user.save()
+
+        return res.status(200).json({
+            success:true,
+            message:"profile update successfull",
+            user
+        })
 
     } catch (error) {
         return res.status(500).json({
