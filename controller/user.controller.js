@@ -210,21 +210,23 @@ const getUser = async (req, res) => {
     }
 }
 
-export const updateProfile = async (req,res) => {
+export const updateProfile = async (req, res) => {
     try {
         const use = req.user;
-        const {user_first_name,user_last_name,email}= req.body;
-       const user =   await User.findByIdAndUpdate(use._id,{
-              user_first_name,
-              user_last_name,
-              email
-        })
+        const { user_first_name, user_last_name, email } = req.body;
+        const user = await User.findByIdAndUpdate(use._id, {
+            user_first_name,
+            user_last_name,
+            email
+        },
+            { new: true }
+        )
 
         await user.save()
 
         return res.status(200).json({
-            success:true,
-            message:"profile update successfull",
+            success: true,
+            message: "profile update successfull",
             user
         })
 
