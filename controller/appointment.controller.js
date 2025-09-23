@@ -298,7 +298,7 @@ export const getToDayAppointment = async (req, res) => {
         if (req.user.role == 'staff') {
             const appointment = await apponitment.find({
                 hospitalId: req.user.hospitalId,
-                createdAt: formatted,
+                date: formatted,
                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
             });
             appointments = appointment
@@ -306,7 +306,7 @@ export const getToDayAppointment = async (req, res) => {
 
         if (req.user.role == 'admin') {
             const appointment = await apponitment.find({
-                createdAt: formatted,
+                date: formatted,
                 status: { $ne: 'cancelled' }
             });
 
