@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
     },
     user_last_name: {
         type: String,
+        
     },
     userid: {
         type: String,
@@ -15,9 +16,10 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         // match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     },
-    email: {
+    email:{
         type: String,
-        unique: true,
+        // unique: true,
+        // requre:false
     },
     //  otp: {
     //     type: Number,
