@@ -7,6 +7,7 @@ import apponitment from "../model/apponitment.js";
 import User from '../model/user.model.js';
 import io from '../index.js';
 import doctorNodel from '../model/doctor.nodel.js';
+import hospitalModel from '../model/hospital.model.js';
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET
@@ -56,10 +57,17 @@ export const createAppointment = async (req, res) => {
         // }
 
         const doctor = await doctorNodel.findById(doctorId)
+        const hospital = await hospitalModel.findById(hospitalId)
         if(!doctor.status){
             return res.status(400).json({
                 success:false,
                 message:`In Active : ${doctor.deactivationReason}`
+            })
+        }
+        if(!hospital.status){
+            return res.status(400).json({
+                success:false,
+                message:`In Active : ${hospital.deactivationReason}`
             })
         }
 
