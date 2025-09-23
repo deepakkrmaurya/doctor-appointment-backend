@@ -55,6 +55,14 @@ export const createAppointment = async (req, res) => {
         //     });
         // }
 
+        const doctor = await doctorNodel.findById(doctorId)
+        if(!doctor.status){
+            return res.status(400).json({
+                success:false,
+                message:`In Active : ${doctor.deactivationReason}`
+            })
+        }
+
         const newAppointment = new apponitment({
             patient,
             mobile,
