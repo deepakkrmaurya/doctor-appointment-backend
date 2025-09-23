@@ -64,7 +64,7 @@ export const createAppointment = async (req, res) => {
                 message:`Doctor In Active : ${doctor.deactivationReason}`
             })
         }
-        if(!hospital.status){
+        if(!hospital.statusd){
             return res.status(400).json({
                 success:false,
                 message:`Hospital In Active : ${hospital.deactivationReason}`
