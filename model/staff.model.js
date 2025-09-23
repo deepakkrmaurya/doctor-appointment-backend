@@ -56,7 +56,7 @@ staffSchema.pre('save', async function (next) {
 // Sign JWT and return
 staffSchema.methods.getSignedJwtToken = function () {
     return jwt.sign({ id: this._id,role:this.role }, process.env.JWT_SECRET, {
-        expiresIn: '8h'
+        expiresIn: '10h'
     });
 };
 

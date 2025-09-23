@@ -49,7 +49,7 @@ adminSchema.methods.generateJWTToken = function () {
         role: this.role
     },
         process.env.JWT_SECRET, {
-        expiresIn: '5d'
+        expiresIn: '10d'
     });
 }
 

@@ -91,7 +91,7 @@ HospitalSchema.methods.comparePassword = async function (candidatePassword) {
 
 HospitalSchema.methods.generateAuthToken = async function () {
   const token = await jwt.sign({ id: this._id, role: this.role, }, process.env.JWT_SECRET, {
-    expiresIn: '8h',
+    expiresIn: '10d',
   })
   return token;
 }

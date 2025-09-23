@@ -131,7 +131,7 @@ export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
     // Validate email and password
-    console.log(req.body)
+    // console.log(req.body)
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
@@ -149,19 +149,20 @@ export const Login = async (req, res) => {
     // Generate a token (assuming you have a method to generate tokens)
     const token = await doctor.generateAuthToken(); // Assuming you have a method to generate tokens
     // Send response with doctor details and token
-    const doctorData = doctor.toObject();
-    delete doctorData.password; // Remove password from response 
-
+    // const doctorData = doctor.toObject();
+    // delete doctorData.password; // Remove password from response 
+      doctor.password=undefined
     const option = {
       httpOnly: true,
       secure: true
     }
+
     return res.status(200)
       .cookie('token', token, option)
       .json({
         success: true,
         message: "Login successful",
-        user: doctorData,
+        user: doctor,
         token,
       });
   } catch (error) {
@@ -397,7 +398,7 @@ export const updateStatusByDoctorId = async (req, res) => {
     doctor.deactivationReason = deactivationReason
     doctor.status = !doctor.status;
     await doctor.save()
-    io.emit('doctorStatusUpdate',doctor)
+    io.emit('doctorStatusUpdate', doctor)
     return res.status(200).json({
       success: true,
       message: "doctor status update"
@@ -488,38 +489,59 @@ export const getDoctorSlotsByDate = async (req, res) => {
   }
 };
 
-export const ChangePassword = async(req,res)=>{
+export const ChangePassword = async (req, res) => {
   try {
     const user = req.user;
-    const {currentPassword,newPassword}=req.body;
+    const { currentPassword, newPassword } = req.body;
 
-    if(!currentPassword || !newPassword){
+    if (!currentPassword || !newPassword) {
       return res.status(400).json({
-        success:false,
-        message:"password is required"
+        success: false,
+        message: "password is required"
       })
     }
     var getUser = null
-     getUser = await doctorNodel.findById(user._id).select('+password')
-     if(!getUser){
-       getUser = await hospitalModel.findById(user._id).select('+password')
-     }
+    getUser = await doctorNodel.findById(user._id).select('+password')
+    if (!getUser) {
+      getUser = await hospitalModel.findById(user._id).select('+password')
+    }
 
-     const verifyPassword= await bcrypt.compare(currentPassword,getUser.password)
-     if(!verifyPassword){
+    const verifyPassword = await bcrypt.compare(currentPassword, getUser.password)
+    if (!verifyPassword) {
       return res.status(400).json({
-        success:false,
-        message:"Invalid old password"
+        success: false,
+        message: "Invalid old password"
       })
-     }
-     getUser.password = newPassword
-     await getUser.save()
-     return res.status(200).json({
-        success:true,
-        message:"password change success"
-      })
+    }
+    getUser.password = newPassword
+    await getUser.save()
+    return res.status(200).json({
+      success: true,
+      message: "password change success"
+    })
 
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+}
+
+export const ActiveDoctor = async (req, res) => {
+  try {
+    const user = req.user;
+    console.log()
+    const getDoctor = await doctorNodel.findByIdAndUpdate(user._id, { new: true });
+    getDoctor.active = !getDoctor.active
+    getDoctor.currentAppointment = 1
+    await getDoctor.save();
+    io.emit("doctoractive",getDoctor)
+    return res.status(200).json({
+      success:true,
+      getDoctor
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Error"
+    })
   }
 }

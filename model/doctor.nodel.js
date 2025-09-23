@@ -54,11 +54,14 @@ const DoctorSchema = new mongoose.Schema({
   },
   currentAppointment: {
     type: Number,
-   
+    
+  },
+  active: {
+    type: Boolean,
+    default:false
   },
   totalAppointments: {
     type: Number,
-   
   },
   experience: {
     type: Number,
@@ -117,7 +120,7 @@ DoctorSchema.methods.comparePassword = async function (candidatePassword) {
 DoctorSchema.methods.generateAuthToken = async function () {
   const token
     = await jwt.sign({ id: this._id, role: this.role, }, process.env.JWT_SECRET, {
-      expiresIn: '8h',
+      expiresIn: '10d',
     });
   return token;
 }
