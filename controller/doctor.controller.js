@@ -528,10 +528,9 @@ export const ChangePassword = async (req, res) => {
 export const ActiveDoctor = async (req, res) => {
   try {
     const user = req.user;
-    console.log()
     const getDoctor = await doctorNodel.findByIdAndUpdate(user._id, { new: true });
     getDoctor.active = !getDoctor.active
-    getDoctor.currentAppointment = 1
+    // getDoctor.currentAppointment = 1
     await getDoctor.save();
     io.emit("doctoractive",getDoctor)
     return res.status(200).json({
