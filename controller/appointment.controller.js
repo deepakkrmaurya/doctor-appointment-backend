@@ -58,16 +58,16 @@ export const createAppointment = async (req, res) => {
 
         const doctor = await doctorNodel.findById(doctorId)
         const hospital = await hospitalModel.findById(hospitalId)
-        if(!doctor.status){
+        if (!doctor.status) {
             return res.status(400).json({
-                success:false,
-                message:`Doctor In Active`
+                success: false,
+                message: `Doctor In Active`
             })
         }
-        if(!hospital.status){
+        if (!hospital.status) {
             return res.status(400).json({
-                success:false,
-                message:`Hospital In Active`
+                success: false,
+                message: `Hospital In Active`
             })
         }
 
@@ -87,7 +87,7 @@ export const createAppointment = async (req, res) => {
         newAppointment.paymentMethod = 'Cash'
         newAppointment.paymentStatus = 'pending'
         await newAppointment.save();
-        if(date==formatted){
+        if (date == formatted) {
             io.emit("createAppointment", savedAppointment)
         }
         return res.status(201).json({
@@ -173,51 +173,81 @@ export const getAppointments = async (req, res) => {
 };
 
 // Get single appointment by ID
+// export const getAppointmentById = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         if (!mongoose.Types.ObjectId.isValid(id)) {
+//             return res.status(400).json({ message: "Invalid appointment ID" });
+//         }
+//         const appointments = await apponitment.findById(id)
+//             .populate("patientId", "name email mobile")
+//             .populate("doctorId", "name specialty experience")
+//             .populate("hospitalId", "name email location address phone city state");
+
+//         if (!appointments) {
+//             return res.status(404).json({ message: "Appointment not found" });
+//         }
+
+//         // Check if the requesting user has permission to view this appointment
+//         // const { role, userId } = req.user;
+//         // if (
+//         //     role !== "admin" &&
+//         //     appointment.patientId._id.toString() !== userId &&
+//         //     appointment.doctorId._id.toString() !== userId &&
+//         //     appointment.hospitalId._id.toString() !== userId
+//         // ) {
+//         //     return res.status(403).json({ message: "Unauthorized access" });
+//         // }
+
+//         res.status(200).json(appointments);
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
 export const getAppointmentById = async (req, res) => {
     try {
         const { id } = req.params;
+        const { status } = req.query; // 👈 get status from query (optional)
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid appointment ID" });
         }
-        const appointments = await apponitment.findById(id)
+
+        // Build filter object dynamically
+        const filter = { _id: id };
+        if (status) {
+            filter.status = status; // add status filter only if provided
+        }
+
+        const appointment = await apponitment.findOne(filter)
             .populate("patientId", "name email mobile")
             .populate("doctorId", "name specialty experience")
             .populate("hospitalId", "name email location address phone city state");
 
-        if (!appointments) {
+        if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
 
-        // Check if the requesting user has permission to view this appointment
-        // const { role, userId } = req.user;
-        // if (
-        //     role !== "admin" &&
-        //     appointment.patientId._id.toString() !== userId &&
-        //     appointment.doctorId._id.toString() !== userId &&
-        //     appointment.hospitalId._id.toString() !== userId
-        // ) {
-        //     return res.status(403).json({ message: "Unauthorized access" });
-        // }
-
-        res.status(200).json(appointments);
+        res.status(200).json(appointment);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Update appointment status
 export const updateAppointmentStatus = async (req, res) => {
     try {
         const user = req.user
         const { id } = req.params;
-        const { status } = req.body;
+        var status = null;
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid appointment ID" });
         }
 
-        if (!status || !["confirmed", "cancelled", "completed"].includes(status)) {
-            return res.status(400).json({ message: "Invalid status value" });
-        }
+        // if (!status || !["confirmed", "cancelled", "completed",'check-in'].includes(status)) {
+        //     return res.status(400).json({ message: "Invalid status value" });
+        // }
 
 
         const appointment = await apponitment.findById(id);
@@ -227,9 +257,14 @@ export const updateAppointmentStatus = async (req, res) => {
             { currentAppointment: appointment.appointmentNumber },
             { new: true }
         );
- 
+        console.log(appointment)
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
+        }
+        if (appointment.status == 'check-in') {
+            status = 'confirmed'
+        } else if (appointment.status === 'confirmed') {
+            status = 'completed'
         }
         appointment.status = status;
         const newAppointment = await appointment.save();
@@ -308,7 +343,7 @@ export const getToDayAppointment = async (req, res) => {
             });
 
             appointments = appointment
-            
+
         }
 
         if (req.user.role == 'staff') {

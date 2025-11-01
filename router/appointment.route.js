@@ -20,7 +20,7 @@ const router = express.Router();
 router.post(
   "/",
   authenticate,
-  authorize(["patient", "admin",'hospital','doctor']),
+  authorize(["patient", "admin",'hospital','doctor','staff']),
   createAppointment
 );
 router.post('/verify',authenticate,verifyPayment);
@@ -40,7 +40,7 @@ router.get("/:id",
 router.patch(
   "/:id/status",
   authenticate,
-  authorize(["doctor", "hospital", "patient", "admin"]),
+  authorize(["doctor", "hospital", "patient", "admin",'staff']),
   updateAppointmentStatus
 );
 
