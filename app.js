@@ -33,12 +33,15 @@ import doctorRoutes from './router/doctor.route.js';
 import hospitalRoutes from './router/hospital.route.js';
 import StaffRoutes from './router/staff.route.js';
 import AdminRoutes from './router/admin.route.js';
+import DashboardRoutes from './router/userDashboardRoutes.js';
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/appointment', appointmentRoute)
 app.use('/api/v1/doctor', doctorRoutes)
 app.use('/api/v1/staff', StaffRoutes)
 app.use('/api/v1/hospital', hospitalRoutes)
 app.use('/api/v1/admin', AdminRoutes)
+app.use('/api/v1/dashboard', DashboardRoutes)
+
 // const user_json_url = "URL_OF_YOUR_JSON_FILE";
 // app.get(user_json_url, (res) => {
 //   let data = '';

@@ -35,6 +35,9 @@ router.get("/today", authenticate, authorize(['admin', 'hospital', 'doctor','sta
 router.get("/:id",
   authenticate,
   getAppointmentById);
+router.get("/getAllDashboard",
+  authenticate,
+  getAppointmentById);
 
 // Update appointment status (Doctor/Hospital Admin/Patient access)
 router.patch(

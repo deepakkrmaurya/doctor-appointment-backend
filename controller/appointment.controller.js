@@ -160,8 +160,7 @@ export const getAppointments = async (req, res) => {
         } else if (role === "staff") {
             query.hospitalId = req.user.hospitalId;
         }
-        // Admin can see all appointments
-
+    
         const appointments = await apponitment.find(query)
             .populate("doctorId", "currentAppointment")
             .sort({ createdAt: -1 });
@@ -234,6 +233,39 @@ export const getAppointmentById = async (req, res) => {
     }
 };
 
+export const getAllDashboard = async (req, res) => {
+   try {
+        const { role, _id } = req.user;
+        const user = await User.findById(_id)
+        let query = {};
+        // Filter based on user role
+        if (role === "patient") {
+            query = {
+                $or: [
+                    { patientId: _id },
+                    { mobile: user?.userid }
+                ]
+            };
+
+        } else if (role === "doctor") {
+            query.doctorId = _id;
+        } else if (role === "hospital") {
+            query.hospitalId = _id;
+        }else if (role === "staff") {
+            query.hospitalId = req.user.hospitalId;
+        }
+    
+        const appointments = await apponitment.find(query)
+            .populate("doctorId", "currentAppointment");
+        
+        return res.status(200).json({
+            total_appointment:appointments.length
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 
 // Update appointment status
 export const updateAppointmentStatus = async (req, res) => {
@@ -257,7 +289,7 @@ export const updateAppointmentStatus = async (req, res) => {
             { currentAppointment: appointment.appointmentNumber },
             { new: true }
         );
-        console.log(appointment)
+        
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
@@ -314,70 +346,128 @@ export const cancelAppointment = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+
 export const getToDayAppointment = async (req, res) => {
-    try {
-        const doctorId = req.user._id;
-        if (!mongoose.Types.ObjectId.isValid(doctorId)) {
-            return res.status(400).json({ message: "Invalid doctor ID" });
-        }
-        // Get start and end of today
-        const today = new Date();
-        const formatted = today.toISOString().split("T")[0];
-        // Get all appointments for this doctor created today that aren't cancelled
-        let appointments = null;
-        if (req.user.role == 'hospital') {
-            const appointment = await apponitment.find({
-                hospitalId: doctorId,
-                date: formatted,
-                status: { $ne: 'cancelled' } // Exclude cancelled appointments
-            });
+  try {
+    const loggedInUserId = req.user._id;
+    const { doctorId } = req.query; // allow optional doctor filter (e.g. ?doctorId=xxxx)
 
-            appointments = appointment
-        }
-        if (req.user.role == 'doctor') {
-
-            const appointment = await apponitment.find({
-                doctorId,
-                date: formatted,
-                status: { $ne: 'cancelled' } // Exclude cancelled appointments
-            });
-
-            appointments = appointment
-
-        }
-
-        if (req.user.role == 'staff') {
-            const appointment = await apponitment.find({
-                hospitalId: req.user.hospitalId,
-                date: formatted,
-                status: { $ne: 'cancelled' } // Exclude cancelled appointments
-            });
-            appointments = appointment
-        }
-
-        if (req.user.role == 'admin') {
-            const appointment = await apponitment.find({
-                date: formatted,
-                status: { $ne: 'cancelled' }
-            });
-
-            appointments = appointment
-        }
-
-
-
-
-        return res.status(200).json({
-            success: true,
-            appointments
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(loggedInUserId)) {
+      return res.status(400).json({ message: "Invalid logged-in user ID" });
     }
-}
+    if (doctorId && !mongoose.Types.ObjectId.isValid(doctorId)) {
+      return res.status(400).json({ message: "Invalid doctor ID filter" });
+    }
+
+    // Format today's date as YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
+
+    // Build base query
+    let query = {
+      date: today,
+      status: { $ne: "cancelled" },
+    };
+
+    // Role-based filtering
+    if (req.user.role === "hospital") {
+      query.hospitalId = loggedInUserId;
+    } else if (req.user.role === "doctor") {
+      query.doctorId = loggedInUserId;
+    } else if (req.user.role === "staff") {
+      query.hospitalId = req.user.hospitalId;
+    }
+
+    // Apply doctor filter if provided
+    if (doctorId) {
+      query.doctorId = doctorId;
+    }
+
+    // Fetch appointments
+    const appointments = await apponitment
+      .find(query)
+      .populate("doctorId", "name specialty")
+      .populate("patientId", "name mobile email");
+
+    return res.status(200).json({
+      success: true,
+      count: appointments.length,
+      appointments,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// export const getToDayAppointment = async (req, res) => {
+//     try {
+//         const doctorId = req.user._id;
+//         const { id } = req.params;
+//         if (!mongoose.Types.ObjectId.isValid(doctorId)) {
+//             return res.status(400).json({ message: "Invalid doctor ID" });
+//         }
+//         // Get start and end of today
+//         const today = new Date();
+//         const formatted = today.toISOString().split("T")[0];
+//         // Get all appointments for this doctor created today that aren't cancelled
+//         let appointments = null;
+//         if (req.user.role == 'hospital') {
+//             const appointment = await apponitment.find({
+//                 hospitalId: doctorId,
+//                 date: formatted,
+//                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
+//             });
+
+//             appointments = appointment
+//         }
+//         if (req.user.role == 'doctor') {
+
+//             const appointment = await apponitment.find({
+//                 doctorId,
+//                 date: formatted,
+//                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
+//             });
+
+//             appointments = appointment
+
+//         }
+
+//         if (req.user.role == 'staff') {
+//             const appointment = await apponitment.find({
+//                 hospitalId: req.user.hospitalId,
+//                 date: formatted,
+//                 status: { $ne: 'cancelled' } // Exclude cancelled appointments
+//             });
+//             appointments = appointment
+//         }
+
+//         if (req.user.role == 'admin') {
+//             const appointment = await apponitment.find({
+//                 date: formatted,
+//                 status: { $ne: 'cancelled' }
+//             });
+
+//             appointments = appointment
+//         }
+
+
+
+
+//         return res.status(200).json({
+//             success: true,
+//             appointments
+//         });
+//     } catch (error) {
+//         return res.status(500).json({
+//             success: false,
+//             message: error.message
+//         });
+//     }
+// }
 // Get available slots for a doctor on a specific date
 export const getAvailableSlots = async (req, res) => {
     try {
