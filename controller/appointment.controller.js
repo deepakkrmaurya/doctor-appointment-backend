@@ -300,9 +300,9 @@ export const updateAppointmentStatus = async (req, res) => {
         }
         appointment.status = status;
         const newAppointment = await appointment.save();
-        if(appointment.status === 'confirmed'){
+        
             io.emit("doctorUpdate", updatedDoctor);
-        }
+        
         io.emit("appointmentUpdate", newAppointment);
         return res.json(appointment)
     } catch (error) {

@@ -158,14 +158,15 @@ AppointmentSchema.pre("save", async function (next) {
     if (!this.appointmentNumber) {
       // Normalize date (only yyyy-mm-dd)
       const dateKey = new Date(this.date).toISOString().split("T")[0];
-
-      const counter = await counterModel.findOneAndUpdate(
+    if(this.appointment.status === 'confirmed'){
+       const counter = await counterModel.findOneAndUpdate(
         { doctorId: this.doctorId, date: dateKey },
         { $inc: { seq: 1 } }, // atomic increment
         { new: true, upsert: true } // create if not exists
       );
-
       this.appointmentNumber = counter.seq;
+    }
+      
     }
     next();
   } catch (err) {
