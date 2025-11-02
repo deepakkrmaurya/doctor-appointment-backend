@@ -158,7 +158,7 @@ AppointmentSchema.pre("save", async function (next) {
     if (!this.appointmentNumber) {
       // Normalize date (only yyyy-mm-dd)
       const dateKey = new Date(this.date).toISOString().split("T")[0];
-    if(this.appointment.status === 'confirmed'){
+    if(this.status === 'confirmed'){
        const counter = await counterModel.findOneAndUpdate(
         { doctorId: this.doctorId, date: dateKey },
         { $inc: { seq: 1 } }, // atomic increment
