@@ -162,7 +162,7 @@ export const getAppointments = async (req, res) => {
         }
     
         const appointments = await apponitment.find(query)
-            .populate("doctorId", "currentAppointment")
+            .populate("doctorId", "currentAppointment availability")
             .sort({ createdAt: -1 });
 
         return res.status(200).json(appointments);

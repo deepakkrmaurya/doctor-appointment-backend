@@ -41,10 +41,10 @@ const AppointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['confirmed', 'cancelled', 'completed', 'pending','check-in'],
+    enum: ['confirmed', 'cancelled', 'completed', 'pending', 'check-in'],
     default: 'check-in',
     required: true,
-    
+
   },
   paymentStatus: {
     type: String,
@@ -62,7 +62,7 @@ const AppointmentSchema = new mongoose.Schema({
   amount: {
     type: Number,
   },
-  appointmentNumber:{
+  appointmentNumber: {
     type: Number,
   },
   token: {
@@ -156,17 +156,17 @@ AppointmentSchema.pre('save', async function (next) {
 AppointmentSchema.pre("save", async function (next) {
   try {
     if (!this.appointmentNumber) {
-      // Normalize date (only yyyy-mm-dd)
-      const dateKey = new Date(this.date).toISOString().split("T")[0];
-    if(this.status === 'confirmed'){
-       const counter = await counterModel.findOneAndUpdate(
-        { doctorId: this.doctorId, date: dateKey },
-        { $inc: { seq: 1 } }, // atomic increment
-        { new: true, upsert: true } // create if not exists
-      );
-      this.appointmentNumber = counter.seq;
-    }
       
+      const dateKey = new Date(this.date).toISOString().split("T")[0];
+      if (this.status === 'confirmed') {
+        const counter = await counterModel.findOneAndUpdate(
+          { doctorId: this.doctorId, date: dateKey },
+          { $inc: { seq: 1 } }, // atomic increment
+          { new: true, upsert: true } // create if not exists
+        );
+        this.appointmentNumber = counter.seq;
+      }
+
     }
     next();
   } catch (err) {
