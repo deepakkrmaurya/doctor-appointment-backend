@@ -896,8 +896,8 @@ export const ActiveDoctor = async (req, res) => {
     doctor.active = !doctor.active;
     await doctor.save();
     const getDoctor = await Doctor.findById(user._id);
-    
-    io.emit("doctoractive",getDoctor)
+
+    io.emit("doctoractive", getDoctor)
 
 
     return res.status(200).json({
@@ -1030,7 +1030,7 @@ export const addBulkAvailability = async (req, res) => {
   try {
     const { doctorId } = req.params;
     const { dates, startTime, endTime } = req.body;
-
+   
     // Validate input
     if (!dates || !Array.isArray(dates) || dates.length === 0) {
       return res.status(400).json({
@@ -1045,7 +1045,7 @@ export const addBulkAvailability = async (req, res) => {
         message: "Start time and end time are required"
       });
     }
-
+     console.log(req.body)
     // Validate time format
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {

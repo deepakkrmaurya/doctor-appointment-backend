@@ -55,6 +55,9 @@ const DoctorSchema = new mongoose.Schema(
     currentAppointment: {
       type: Number,
     },
+    appointmentNumber: {
+      type: Number,
+    },
     active: {
       type: Boolean,
       default: false,

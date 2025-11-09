@@ -71,6 +71,12 @@ export const createAppointment = async (req, res) => {
             })
         }
 
+        const getAppointment = await apponitment.find({
+            doctorId: doctorId,
+            date: date
+        });
+         
+        
         const newAppointment = new apponitment({
             patient,
             mobile,
@@ -82,6 +88,7 @@ export const createAppointment = async (req, res) => {
             // slot,
             amount,
             booking_amount,
+            appointmentNumber:getAppointment.length+1
         });
         const savedAppointment = await newAppointment.save();
         newAppointment.paymentMethod = 'Cash'
@@ -160,7 +167,7 @@ export const getAppointments = async (req, res) => {
         } else if (role === "staff") {
             query.hospitalId = req.user.hospitalId;
         }
-    
+
         const appointments = await apponitment.find(query)
             .populate("doctorId", "currentAppointment availability")
             .sort({ createdAt: -1 });
@@ -234,7 +241,7 @@ export const getAppointmentById = async (req, res) => {
 };
 
 export const getAllDashboard = async (req, res) => {
-   try {
+    try {
         const { role, _id } = req.user;
         const user = await User.findById(_id)
         let query = {};
@@ -251,15 +258,15 @@ export const getAllDashboard = async (req, res) => {
             query.doctorId = _id;
         } else if (role === "hospital") {
             query.hospitalId = _id;
-        }else if (role === "staff") {
+        } else if (role === "staff") {
             query.hospitalId = req.user.hospitalId;
         }
-    
+
         const appointments = await apponitment.find(query)
             .populate("doctorId", "currentAppointment");
-        
+
         return res.status(200).json({
-            total_appointment:appointments.length
+            total_appointment: appointments.length
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -289,7 +296,7 @@ export const updateAppointmentStatus = async (req, res) => {
             { currentAppointment: appointment.appointmentNumber },
             { new: true }
         );
-        
+
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
@@ -300,9 +307,9 @@ export const updateAppointmentStatus = async (req, res) => {
         }
         appointment.status = status;
         const newAppointment = await appointment.save();
-        
-            io.emit("doctorUpdate", updatedDoctor);
-        
+
+        io.emit("doctorUpdate", updatedDoctor);
+
         io.emit("appointmentUpdate", newAppointment);
         return res.json(appointment)
     } catch (error) {
@@ -351,58 +358,58 @@ export const cancelAppointment = async (req, res) => {
 
 
 export const getToDayAppointment = async (req, res) => {
-  try {
-    const loggedInUserId = req.user._id;
-    const { doctorId } = req.query; // allow optional doctor filter (e.g. ?doctorId=xxxx)
+    try {
+        const loggedInUserId = req.user._id;
+        const { doctorId } = req.query; // allow optional doctor filter (e.g. ?doctorId=xxxx)
 
-    // Validate IDs
-    if (!mongoose.Types.ObjectId.isValid(loggedInUserId)) {
-      return res.status(400).json({ message: "Invalid logged-in user ID" });
+        // Validate IDs
+        if (!mongoose.Types.ObjectId.isValid(loggedInUserId)) {
+            return res.status(400).json({ message: "Invalid logged-in user ID" });
+        }
+        if (doctorId && !mongoose.Types.ObjectId.isValid(doctorId)) {
+            return res.status(400).json({ message: "Invalid doctor ID filter" });
+        }
+
+        // Format today's date as YYYY-MM-DD
+        const today = new Date().toISOString().split("T")[0];
+
+        // Build base query
+        let query = {
+            date: today,
+            status: { $ne: "cancelled" },
+        };
+
+        // Role-based filtering
+        if (req.user.role === "hospital") {
+            query.hospitalId = loggedInUserId;
+        } else if (req.user.role === "doctor") {
+            query.doctorId = loggedInUserId;
+        } else if (req.user.role === "staff") {
+            query.hospitalId = req.user.hospitalId;
+        }
+
+        // Apply doctor filter if provided
+        if (doctorId) {
+            query.doctorId = doctorId;
+        }
+
+        // Fetch appointments
+        const appointments = await apponitment
+            .find(query)
+            .populate("doctorId", "name specialty")
+            .populate("patientId", "name mobile email");
+
+        return res.status(200).json({
+            success: true,
+            count: appointments.length,
+            appointments,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
-    if (doctorId && !mongoose.Types.ObjectId.isValid(doctorId)) {
-      return res.status(400).json({ message: "Invalid doctor ID filter" });
-    }
-
-    // Format today's date as YYYY-MM-DD
-    const today = new Date().toISOString().split("T")[0];
-
-    // Build base query
-    let query = {
-      date: today,
-      status: { $ne: "cancelled" },
-    };
-
-    // Role-based filtering
-    if (req.user.role === "hospital") {
-      query.hospitalId = loggedInUserId;
-    } else if (req.user.role === "doctor") {
-      query.doctorId = loggedInUserId;
-    } else if (req.user.role === "staff") {
-      query.hospitalId = req.user.hospitalId;
-    }
-
-    // Apply doctor filter if provided
-    if (doctorId) {
-      query.doctorId = doctorId;
-    }
-
-    // Fetch appointments
-    const appointments = await apponitment
-      .find(query)
-      .populate("doctorId", "name specialty")
-      .populate("patientId", "name mobile email");
-
-    return res.status(200).json({
-      success: true,
-      count: appointments.length,
-      appointments,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
 // export const getToDayAppointment = async (req, res) => {
