@@ -5,6 +5,7 @@ import cloudinary from 'cloudinary';
 import fs from 'fs/promises';
 import io from "../index.js";
 import hospitalModel from "../model/hospital.model.js";
+import doctorNodel from "../model/doctor.nodel.js";
 
 // Create a new doctor
 export const createDoctor = async (req, res) => {
@@ -1030,7 +1031,7 @@ export const addBulkAvailability = async (req, res) => {
   try {
     const { doctorId } = req.params;
     const { dates, startTime, endTime } = req.body;
-   
+
     // Validate input
     if (!dates || !Array.isArray(dates) || dates.length === 0) {
       return res.status(400).json({
@@ -1045,7 +1046,7 @@ export const addBulkAvailability = async (req, res) => {
         message: "Start time and end time are required"
       });
     }
-     console.log(req.body)
+    console.log(req.body)
     // Validate time format
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
@@ -1259,3 +1260,22 @@ export const getAvailabilityByDateRange = async (req, res) => {
     });
   }
 };
+export const ActiveDoctors = async (req, res) => {
+  try {
+    const { deactivationReason } = req.body
+   
+    const doctor = await doctorNodel.findById(req.user.id)
+    doctor.deactivationReason= deactivationReason
+    doctor.status= !doctor.status
+   const updatedDoctor =  await doctor.save()
+    res.status(200).json({
+      success: true,
+      data: updatedDoctor
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      err: "internal error"
+    })
+  }
+}

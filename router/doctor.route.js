@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { 
   ActiveDoctor, 
+  ActiveDoctors, 
   addAvailability, 
   addBulkAvailability, 
   addDoctorSlots, 
@@ -38,6 +39,7 @@ router.get("/:hospitalId/hospital", getDoctorByHospitalId);
 router.put("/:id", authenticate, authorize(["admin",'hospital','doctor']), upload.single('photo'), updateDoctor);
 router.delete("/:id", authenticate, authorize(["admin",'hospital']), deleteDoctor);
 router.put("/:id/active/doctor", authenticate, authorize(["doctor"]), ActiveDoctor);
+router.post("/active", authenticate, authorize(["doctor"]), ActiveDoctors);
 
 // SLOTS MANAGEMENT ROUTES
 router.post("/:id/slots", authenticate, authorize(["admin",'hospital','doctor']), addDoctorSlots);
