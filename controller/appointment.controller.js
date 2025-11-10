@@ -291,12 +291,12 @@ export const updateAppointmentStatus = async (req, res) => {
 
         const appointment = await apponitment.findById(id);
 
-        const updatedDoctor = await doctorNodel.findByIdAndUpdate(
+        const doctor = await doctorNodel.findByIdAndUpdate(
             user._id,
             { currentAppointment: appointment.appointmentNumber },
             { new: true }
         );
-
+         const updatedDoctor = await doctorNodel.findById(doctor._id)
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
