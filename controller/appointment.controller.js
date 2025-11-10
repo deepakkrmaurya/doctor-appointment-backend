@@ -75,8 +75,8 @@ export const createAppointment = async (req, res) => {
             doctorId: doctorId,
             date: date
         });
-         
-        
+
+
         const newAppointment = new apponitment({
             patient,
             mobile,
@@ -88,7 +88,7 @@ export const createAppointment = async (req, res) => {
             // slot,
             amount,
             booking_amount,
-            appointmentNumber:getAppointment.length+1
+            appointmentNumber: getAppointment.length + 1
         });
         const savedAppointment = await newAppointment.save();
         newAppointment.paymentMethod = 'Cash'
@@ -290,13 +290,15 @@ export const updateAppointmentStatus = async (req, res) => {
 
 
         const appointment = await apponitment.findById(id);
+        if (appointment.status === 'confirmed') {
 
-        const doctor = await doctorNodel.findByIdAndUpdate(
-            user._id,
-            { currentAppointment: appointment.appointmentNumber },
-            { new: true }
-        );
-         const updatedDoctor = await doctorNodel.findById(doctor._id)
+            const doctor = await doctorNodel.findByIdAndUpdate(
+                user._id,
+                { currentAppointment: appointment.appointmentNumber },
+                { new: true }
+            );
+        }
+        const updatedDoctor = await doctorNodel.findById(user._id)
         if (!appointment) {
             return res.status(404).json({ message: "Appointment not found" });
         }
