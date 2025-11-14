@@ -195,7 +195,7 @@ const appointment = async (req, res) => {
 const getUser = async (req, res) => {
     try {
         const user = req.user;
-
+        
         const hospital = await hospitalModel.findById(user?.hospitalId)
         return res.send({
             user,

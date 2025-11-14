@@ -7,7 +7,7 @@ import Admin from "../model/admin.js";
 export const authenticate = async (req, res, next) => {
   try {
     const token = req.cookies.token || req.header("Authorization")?.replace("Bearer ", "");
-
+    
     if (!token) {
       return res.status(400).json({
         success: false,
@@ -15,7 +15,7 @@ export const authenticate = async (req, res, next) => {
       })
     } 
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
-    
+     
     let user = await User.findById(decoded.id).select("-password");
     if (!user) {
       user = await doctorNodel.findById(decoded.id).select("-password");
@@ -31,7 +31,7 @@ export const authenticate = async (req, res, next) => {
     if (!user) {
       user = await Admin.findById(decoded.id).select("-password");
     }
-    // console.log(user)
+    
     req.user = user;
     next();
 

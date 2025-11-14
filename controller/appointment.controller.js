@@ -290,7 +290,7 @@ export const updateAppointmentStatus = async (req, res) => {
 
 
         const appointment = await apponitment.findById(id);
-        if (appointment.status === 'confirmed') {
+        if (appointment.status === 'check-in') {
 
             const doctor = await doctorNodel.findByIdAndUpdate(
                 user._id,

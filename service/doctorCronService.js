@@ -32,7 +32,7 @@ class DoctorCronService {
         {
           $set: { 
             active: false,
-            currentAppointment:1,
+            currentAppointment:0,
             lastActive: new Date(),
             updatedAt: new Date()
           }
