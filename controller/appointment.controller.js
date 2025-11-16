@@ -288,6 +288,14 @@ export const updateAppointmentStatus = async (req, res) => {
         //     return res.status(400).json({ message: "Invalid status value" });
         // }
 
+        const doctor = await doctorNodel.findById(user.id)
+        
+        if (!doctor.active) {
+            return res.status(200).json({
+                success: false,
+                message: "Doctor inactive"
+            })
+        }
 
         const appointment = await apponitment.findById(id);
         if (appointment.status === 'check-in') {
