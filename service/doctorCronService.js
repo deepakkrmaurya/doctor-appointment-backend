@@ -1,54 +1,82 @@
 import cron from 'node-cron';
 import doctorNodel from '../model/doctor.nodel.js';
-import counterModel from '../model/counter.model.js';
-
 
 class DoctorCronService {
   constructor() {
+    console.log('🔄 DoctorCronService constructor called at:', new Date().toLocaleString());
     this.initCronJobs();
   }
 
   initCronJobs() {
-    // Run every day at 11:00 PM (23:00) to set all doctors to inactive
-    cron.schedule('0 23 * * *', async () => {
-      console.log('🌙 Running doctor status update cron job...');
+    console.log('⏰ Initializing cron jobs at:', new Date().toLocaleString());
+    
+    // Test cron - हर मिनट (debugging के लिए)
+    cron.schedule('* * * * *', () => {
+      console.log('✅ TEST CRON WORKING! Time:', new Date().toLocaleString());
+    });
+
+    // Main job - रोज 11:23 PM (19:18) पर
+    cron.schedule('23 23 * * *', async () => {
+      console.log('🌙 MAIN CRON: Running at 7:18 PM (19:18)');
       await this.setAllDoctorsInactive();
     });
 
-    // Optional: Run at 2:00 AM as backup
-    cron.schedule('0 2 * * *', async () => {
-      console.log('🌙 Backup: Running doctor status update cron job...');
+    // Backup job - 11:20 PM पर (2 minute बाद)
+    cron.schedule('20 23 * * *', async () => {
+      console.log('🌙 BACKUP CRON: Running at 7:20 PM (19:20)');
       await this.setAllDoctorsInactive();
     });
 
-    console.log('✅ Doctor cron jobs initialized');
+    console.log('✅ All cron jobs scheduled for 7:18 PM and 7:20 PM');
+    
+    // Show next execution times
+    this.showNextRuns();
+  }
+
+  showNextRuns() {
+    // Next 7:18 PM calculation
+    const now = new Date();
+    const targetTime = new Date();
+    targetTime.setHours(19, 18, 0, 0);
+    
+    if (now > targetTime) {
+      targetTime.setDate(targetTime.getDate() + 1);
+    }
+    
+    const timeDiff = targetTime - now;
+    const hoursLeft = Math.floor(timeDiff / (1000 * 60 * 60));
+    const minutesLeft = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    console.log(`⏳ Next cron execution at 7:18 PM (in ${hoursLeft}h ${minutesLeft}m)`);
   }
 
   async setAllDoctorsInactive() {
     try {
-        
+      console.log('🔄 Starting setAllDoctorsInactive...');
+      
       const result = await doctorNodel.updateMany(
         { active: true },
         {
           $set: { 
             active: false,
-            currentAppointment:0,
+            currentAppointment: 0,
             lastActive: new Date(),
             updatedAt: new Date()
           }
         }
       );
 
-      console.log(`✅ Set ${result.modifiedCount} doctors to inactive status`);
-      console.log(`🕒 All doctors set to inactive at: ${new Date().toLocaleString()}`);
-
+      console.log(`✅ Set ${result.modifiedCount} doctors to inactive`);
+      console.log(`🕒 Completed at: ${new Date().toLocaleString()}`);
+      
       return {
         success: true,
         message: `Set ${result.modifiedCount} doctors to inactive`,
+        modifiedCount: result.modifiedCount,
         timestamp: new Date()
       };
     } catch (error) {
-      console.error('❌ Error setting doctors to inactive:', error);
+      console.error('❌ Error in setAllDoctorsInactive:', error);
       return {
         success: false,
         message: error.message,
@@ -57,9 +85,9 @@ class DoctorCronService {
     }
   }
 
-  // Manual trigger function
+  // Manual trigger function (testing के लिए)
   async manualSetInactive() {
-    console.log('🔄 Manually setting all doctors to inactive...');
+    console.log('🔄 Manually triggering setAllDoctorsInactive...');
     return await this.setAllDoctorsInactive();
   }
 
@@ -73,8 +101,15 @@ class DoctorCronService {
       return 0;
     }
   }
+
+  // Test function for immediate execution
+  async testNow() {
+    console.log('🧪 TEST: Executing cron job immediately...');
+    return await this.setAllDoctorsInactive();
+  }
 }
 
-// Create and export singleton instance
+// Singleton instance
+console.log('📝 Creating DoctorCronService instance...');
 const doctorCronService = new DoctorCronService();
 export default doctorCronService;
