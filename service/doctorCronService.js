@@ -16,18 +16,18 @@ class DoctorCronService {
     });
 
     // Main job - रोज 11:23 PM (19:18) पर
-    cron.schedule('23 23 * * *', async () => {
+    cron.schedule('11 23 * * *', async () => {
       console.log('🌙 MAIN CRON: Running at 7:18 PM (19:18)');
       await this.setAllDoctorsInactive();
     });
 
     // Backup job - 11:20 PM पर (2 minute बाद)
-    cron.schedule('20 23 * * *', async () => {
-      console.log('🌙 BACKUP CRON: Running at 7:20 PM (19:20)');
+    cron.schedule('11 23 * * *', async () => {
+      console.log('🌙 BACKUP CRON: Running at 11:02 PM (23:11)');
       await this.setAllDoctorsInactive();
     });
 
-    console.log('✅ All cron jobs scheduled for 7:18 PM and 7:20 PM');
+    console.log('✅ All cron jobs scheduled for 11:02 PM and 11:02 PM');
     
     // Show next execution times
     this.showNextRuns();
