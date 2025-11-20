@@ -57,13 +57,17 @@ export const createAppointment = async (req, res) => {
         // }
 
         const doctor = await doctorNodel.findById(doctorId)
+
         const hospital = await hospitalModel.findById(hospitalId)
-        if (!doctor.status) {
+
+        if (!doctor.status && req.user.role === 'patient') {
             return res.status(400).json({
                 success: false,
-                message: `Doctor In Active`
-            })
+                message: "Doctor is Inactive. Patients cannot book appointments."
+            });
         }
+
+
         if (!hospital.status) {
             return res.status(400).json({
                 success: false,
@@ -289,7 +293,7 @@ export const updateAppointmentStatus = async (req, res) => {
         // }
 
         const doctor = await doctorNodel.findById(user.id)
-        
+
         if (!doctor.active) {
             return res.status(200).json({
                 success: false,
