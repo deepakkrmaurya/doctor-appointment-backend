@@ -920,45 +920,18 @@ export const ActiveDoctor = async (req, res) => {
 export const addAvailability = async (req, res) => {
   try {
     const { doctorId } = req.params;
-    const { date, startTime, endTime } = req.body;
+    const availabilityData = req.body.availabilityData; // array of objects
+    console.log("Incoming Availability:", availabilityData);
 
-    // Validate input
-    if (!date || !startTime || !endTime) {
+    if (!Array.isArray(availabilityData)) {
       return res.status(400).json({
         success: false,
-        message: "Date, start time and end time are required"
-      });
-    }
-
-    // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid date format. Use YYYY-MM-DD"
-      });
-    }
-
-    // Validate time format
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid time format. Use HH:MM in 24-hour format"
-      });
-    }
-
-    // Check if end time is after start time
-    if (startTime >= endTime) {
-      return res.status(400).json({
-        success: false,
-        message: "End time must be after start time"
+        message: "availabilityData must be an array"
       });
     }
 
     // Find doctor
     const doctor = await Doctor.findById(doctorId);
-
     if (!doctor) {
       return res.status(404).json({
         success: false,
@@ -966,55 +939,44 @@ export const addAvailability = async (req, res) => {
       });
     }
 
+    // Validate all dates and times
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD
+    const timeRegex = /^(0[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/; // 12-hour format
 
-    // Format time for display (convert to 12-hour format)
-    const formatTimeForDisplay = (time) => {
-      const [hours, minutes] = time.split(':');
-      const hour = parseInt(hours);
-
-      if (hour === 0) {
-        return `12:${minutes} AM`;
-      } else if (hour === 12) {
-        return `12:${minutes} PM`;
-      } else if (hour > 12) {
-        return `${hour - 12}:${minutes} PM`;
-      } else {
-        return `${hour}:${minutes} AM`;
+    for (const item of availabilityData) {
+      if (!item.date || !dateRegex.test(item.date)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid date format at: ${item.date}`
+        });
       }
-    };
 
-    const display = `${formatTimeForDisplay(startTime)} - ${formatTimeForDisplay(endTime)}`;
+      if (!Array.isArray(item.timeSlots)) {
+        return res.status(400).json({
+          success: false,
+          message: `timeSlots must be an array at date: ${item.date}`
+        });
+      }
 
-    // Check if availability already exists for this date
-    const existingAvailabilityIndex = doctor.availability.findIndex(
-      avail => avail.date === date
-    );
-
-    if (existingAvailabilityIndex !== -1) {
-      // Update existing availability
-      doctor.availability[existingAvailabilityIndex] = {
-        date,
-        display: [display]
-      };
-    } else {
-      // Add new availability
-      doctor.availability.push({
-        date,
-        display: [display]
-      });
+      for (const slot of item.timeSlots) {
+        if (!timeRegex.test(slot.startTime) || !timeRegex.test(slot.endTime)) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid time format at date: ${item.date}`
+          });
+        }
+      }
     }
-    console.log(req.body);
+
+    // Replace doctor's availability with new list
+    doctor.availability = availabilityData;
+
     await doctor.save();
 
     res.status(200).json({
       success: true,
-      message: "Availability added successfully",
-      data: {
-        date,
-        startTime,
-        endTime,
-        display
-      }
+      message: "Availability saved successfully",
+      data: doctor.availability
     });
 
   } catch (error) {
@@ -1191,7 +1153,10 @@ export const getDoctorAvailability = async (req, res) => {
   try {
     const { doctorId } = req.params;
 
-    const doctor = await Doctor.findById(doctorId).select('availability name specialty');
+    // Fetch doctor with limited fields
+    const doctor = await Doctor.findById(doctorId)
+      .select("name specialty availability");
+
     if (!doctor) {
       return res.status(404).json({
         success: false,
@@ -1201,23 +1166,23 @@ export const getDoctorAvailability = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Doctor availability fetched successfully",
       data: {
-        doctor: {
-          name: doctor.name,
-          specialty: doctor.specialty,
-          availability: doctor.availability
-        }
+        name: doctor.name,
+        specialty: doctor.specialty,
+        availability: doctor.availability
       }
     });
 
   } catch (error) {
     console.error("Error fetching availability:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal server error"
     });
   }
 };
+
 
 // Get availability by date range
 export const getAvailabilityByDateRange = async (req, res) => {

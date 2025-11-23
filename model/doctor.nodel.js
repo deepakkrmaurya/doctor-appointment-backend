@@ -1,15 +1,15 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-const SlotSchema = new mongoose.Schema({
-  date: {
-    type: String,
-    required: true,
-  },
-  slots: {
-    type: [String],
-    required: true,
-  },
+const timeSlotSchema = new mongoose.Schema({
+  startTime: String,
+  endTime: String,
+  id: String
+});
+
+const availabilitySchema = new mongoose.Schema({
+  date: String,
+  timeSlots: [timeSlotSchema]
 });
 
 const DoctorSchema = new mongoose.Schema(
@@ -94,18 +94,7 @@ const DoctorSchema = new mongoose.Schema(
     deactivationReason: {
       type: String,
     },
-    availability: [
-      {
-        date: {
-          type: String,
-          required: true,
-        },
-        display: {
-          type: [String],
-          required: true,
-        },
-      },
-    ],
+    availability: [availabilitySchema]
 
   },
   {
