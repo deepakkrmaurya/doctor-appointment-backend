@@ -8,6 +8,7 @@ import {
   ChangePassword, 
   clearDoctorSlotsByDate, 
   createDoctor, 
+  DeactivateAllDoctor, 
   deleteDoctor, 
   getAllDoctorSlots, 
   getAvailabilityByDateRange, 
@@ -48,6 +49,7 @@ router.delete("/:id/slots", authenticate, authorize(["admin",'hospital','doctor'
 router.delete("/:id/slots/clear", authenticate, authorize(["admin",'hospital','doctor']), clearDoctorSlotsByDate);
 router.get("/:id/slots/:date", authenticate, authorize(["admin",'hospital','doctor','staff']), getDoctorSlotsByDate);
 router.get("/:id/slots", authenticate, authorize(["admin",'hospital','doctor','staff']), getAllDoctorSlots);
+router.patch("/DeactivateAllDoctor", authenticate, authorize(['doctor']), DeactivateAllDoctor);
 
 
 

@@ -1228,15 +1228,44 @@ export const getAvailabilityByDateRange = async (req, res) => {
 export const ActiveDoctors = async (req, res) => {
   try {
     const { deactivationReason } = req.body
-   
+
     const doctor = await doctorNodel.findById(req.user.id)
-    doctor.deactivationReason= deactivationReason
-    doctor.status= !doctor.status
-   const updatedDoctor =  await doctor.save()
+    doctor.deactivationReason = deactivationReason
+    doctor.status = !doctor.status
+    const updatedDoctor = await doctor.save()
     res.status(200).json({
       success: true,
       data: updatedDoctor
     });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      err: "internal error"
+    })
+  }
+}
+
+export const DeactivateAllDoctor = async (req, res) => {
+  try {
+    const user = req.user;
+    const result = await doctorNodel.updateMany(
+      {
+        _id: user.id,
+        active: true
+      },
+      {
+        $set: {
+          active: false,
+          currentAppointment: 0,
+          lastActive: new Date(),
+          updatedAt: new Date()
+        }
+      }
+    );
+    return res.status(200).json({
+      success: true,
+      message: 'deactive'
+    })
   } catch (error) {
     return res.status(500).json({
       success: false,
