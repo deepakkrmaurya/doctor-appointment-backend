@@ -16,7 +16,7 @@ class DoctorCronService {
     });
 
     // Main job - रोज 11:23 PM (19:18) पर
-    cron.schedule('10 23 * * *', async () => {
+    cron.schedule('10 * * * *', async () => {
       console.log('🌙 MAIN CRON: Running at 7:18 PM (19:18)');
       await this.setAllDoctorsInactive();
     });

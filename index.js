@@ -3,7 +3,6 @@ import connectDB from "./config/db.js";
 import { v2 as cloudinary } from "cloudinary";
 import http from "http";
 import { Server } from "socket.io";  // ✅ Correct import
-import apponitment from "./model/apponitment.js";
 
 const PORT = process.env.PORT || 3000;
 

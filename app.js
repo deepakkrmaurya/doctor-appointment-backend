@@ -4,8 +4,9 @@ dotenv.config();
 import cookieParser from 'cookie-parser';
 import cors from 'cors'
 import fetch from "node-fetch";
+
 const app = express();
-// import './service/doctorCronService.js';
+import './service/doctorCronService.js';
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? 'https://hummarichikitsa.vercel.app'
@@ -34,6 +35,8 @@ import hospitalRoutes from './router/hospital.route.js';
 import StaffRoutes from './router/staff.route.js';
 import AdminRoutes from './router/admin.route.js';
 import DashboardRoutes from './router/userDashboardRoutes.js';
+import { autoDoctorReset } from './middleware/autoDoctorReset.js';
+app.use(autoDoctorReset);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/appointment', appointmentRoute)
 app.use('/api/v1/doctor', doctorRoutes)
