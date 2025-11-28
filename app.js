@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors'
 import fetch from "node-fetch";
 const app = express();
-import './service/doctorCronService.js';
+// import './service/doctorCronService.js';
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? 'https://hummarichikitsa.vercel.app'
