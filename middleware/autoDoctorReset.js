@@ -6,7 +6,6 @@ export const autoDoctorReset = async (req, res, next) => {
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
     let settings = await Settings.findOne();
-
     if (!settings) {
       // First time create settings
       settings = await Settings.create({ lastResetDate: today });
