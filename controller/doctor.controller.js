@@ -920,7 +920,7 @@ export const ActiveDoctor = async (req, res) => {
 export const addAvailability = async (req, res) => {
   try {
     const { doctorId } = req.params;
-    const availabilityData = req.body.availabilityData; // array of objects
+    const availabilityData = req.body.availabilityData;
     console.log("Incoming Availability:", availabilityData);
 
     if (!Array.isArray(availabilityData)) {
@@ -968,15 +968,70 @@ export const addAvailability = async (req, res) => {
       }
     }
 
-    // Replace doctor's availability with new list
-    doctor.availability = availabilityData;
+    // Check for duplicates and prepare new availability
+    const existingAvailability = doctor.availability || [];
+    const newAvailability = [...existingAvailability];
+    let duplicatesFound = 0;
+    let newEntriesAdded = 0;
 
+    availabilityData.forEach(newItem => {
+      const existingDateIndex = newAvailability.findIndex(
+        existing => existing.date === newItem.date
+      );
+
+      if (existingDateIndex === -1) {
+        // New date - add all time slots
+        newAvailability.push(newItem);
+        newEntriesAdded += newItem.timeSlots.length;
+      } else {
+        // Existing date - check for duplicate time slots
+        const existingTimeSlots = newAvailability[existingDateIndex].timeSlots;
+        const newTimeSlots = newItem.timeSlots;
+
+        newTimeSlots.forEach(newSlot => {
+          // Check if time slot with same startTime and endTime already exists
+          const isDuplicate = existingTimeSlots.some(existingSlot =>
+            existingSlot.startTime === newSlot.startTime &&
+            existingSlot.endTime === newSlot.endTime
+          );
+
+          if (!isDuplicate) {
+            // Add only if it's not a duplicate
+            existingTimeSlots.push(newSlot);
+            newEntriesAdded++;
+          } else {
+            duplicatesFound++;
+            console.log(`Duplicate time slot skipped: ${newItem.date} - ${newSlot.startTime} to ${newSlot.endTime}`);
+          }
+        });
+      }
+    });
+
+    // If all time slots are duplicates, return error
+    if (duplicatesFound > 0 && newEntriesAdded === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "All time slots already exist for the provided dates",
+        duplicatesFound: duplicatesFound
+      });
+    }
+
+    // Update doctor's availability
+    doctor.availability = newAvailability;
     await doctor.save();
+
+    const responseMessage = duplicatesFound > 0 
+      ? `Availability updated successfully. ${newEntriesAdded} new time slots added, ${duplicatesFound} duplicates skipped.`
+      : "Availability saved successfully";
 
     res.status(200).json({
       success: true,
-      message: "Availability saved successfully",
-      data: doctor.availability
+      message: responseMessage,
+      data: doctor.availability,
+      stats: {
+        newEntriesAdded,
+        duplicatesFound
+      }
     });
 
   } catch (error) {

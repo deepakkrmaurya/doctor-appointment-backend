@@ -25,7 +25,7 @@ export const createAppointment = async (req, res) => {
             doctorId,
             hospitalId,
             date,
-            // slot,
+            slot,
             amount,
             booking_amount,
             paymentStatus
@@ -89,7 +89,7 @@ export const createAppointment = async (req, res) => {
             doctorId,
             hospitalId,
             date,
-            // slot,
+            slot,
             amount,
             booking_amount,
             appointmentNumber: getAppointment.length + 1

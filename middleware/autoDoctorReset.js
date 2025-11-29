@@ -4,14 +4,16 @@ import Settings from "../model/settings.model.js";
 export const autoDoctorReset = async (req, res, next) => {
   try {
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
     let settings = await Settings.findOne();
+    
     if (!settings) {
       // First time create settings
       settings = await Settings.create({ lastResetDate: today });
       return next();
     }
-
+    // console.log(today)
+    // console.log(settings.lastResetDate)
+    // console.log(settings.lastResetDate !== today)
     // अगर आज reset नहीं हुआ है
     if (settings.lastResetDate !== today) {
       console.log("🔄 Auto Doctor Reset Triggered!");
