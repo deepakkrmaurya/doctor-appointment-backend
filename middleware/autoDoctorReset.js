@@ -3,7 +3,7 @@ import Settings from "../model/settings.model.js";
 
 export const autoDoctorReset = async (req, res, next) => {
   try {
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const today = new Date().toLocaleDateString('en-CA');
     let settings = await Settings.findOne();
     
     if (!settings) {
